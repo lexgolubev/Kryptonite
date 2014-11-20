@@ -10,7 +10,6 @@ void Twofish::key_shedule(const mpz_class &key, int key_length) {
     mpz_class extended_key = key << (k * 64 - key_length);
     key_length = k * 64;
     quint32* m = split_mpz_32_little_endian(extended_key, key_length);
-    qDebug() << QString(extended_key.get_str(16).c_str());
     m_e = new quint32[k];
     m_o = new quint32[k];
     for (int i = 0; i < k; i++) {
@@ -239,7 +238,6 @@ quint32* Twofish::split_mpz_32_little_endian(const mpz_class& word, int key_leng
 }
 
 quint8* Twofish::split_mpz_8(const mpz_class& word, int key_length) {
-    qDebug() << QString(word.get_str(16).c_str());
     int k = key_length / 8;
     quint8* result = new quint8[k];
     for (int i = 0; i < k; i++) {
