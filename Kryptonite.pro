@@ -10,14 +10,17 @@ TARGET = Kryptonite
 INCLUDEPATH += .
 
 # Input
-HEADERS += mainwindow.h rsa.h rsakey.h rsakeygenerator.h twofish.h
+HEADERS += mainwindow.h \
+    algo/rsa/rsa.h \
+    algo/rsa/rsakey.h \
+    algo/rsa/rsakeygenerator.h \
+    algo/twofish/twofish.h
 FORMS += mainwindow.ui
 SOURCES += main.cpp \
            mainwindow.cpp \
-           rsa.cpp \
-           rsakey.cpp \
-           rsakeygenerator.cpp \
-           testtwofish.cpp \
-           twofish.cpp
+    algo/rsa/rsa.cpp \
+    algo/rsa/rsakey.cpp \
+    algo/rsa/rsakeygenerator.cpp \
+    algo/twofish/twofish.cpp
 
 LIBS += -lgmp -lboost_random
