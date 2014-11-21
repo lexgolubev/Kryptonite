@@ -1,7 +1,7 @@
 #include <QtTest/QtTest>
 #include <iostream>
-
-#include "twofish.h"
+#include "def.h"
+#include "../algo/twofish/twofish.h"
 
  class TestTwofish : public QObject
  {
@@ -88,5 +88,7 @@ void TestTwofish::q0_q1() {
     QVERIFY(0x64 == twofish.q1(0xbf));
 }
 
+#ifdef TEST
 QTEST_MAIN(TestTwofish)
 #include "testtwofish.moc"
+#endif
