@@ -1,37 +1,15 @@
 #include <QtTest/QtTest>
 #include <iostream>
-#include "def.h"
 #include "../algo/twofish/twofish.h"
 
- class TestTwofish : public QObject
- {
-     Q_OBJECT
- private slots:
-     void ror4();
-     void ror();
-     void rol();
-     void test256();
-     void test192();
-     void mul_gf();
-     void q0_q1();
- };
-
-void TestTwofish::ror4() {
-    Twofish twofish(0, 0);
-    QVERIFY(0x05 == twofish.ror4(0x0a, 1));
-    QVERIFY(0x0d == twofish.ror4(0x0b, 1));
-    QVERIFY(0x0e == twofish.ror4(0x0b, 2));
-}
-
-void TestTwofish::ror() {
-    Twofish twofish(0, 0);
-    QVERIFY(0xB000069A == twofish.ror(0xd356, 5));
-}
-
-void TestTwofish::rol() {
-    Twofish twofish(0, 0);
-    QVERIFY(0xd356 == twofish.rol(0xB000069A, 5));
-}
+class TestTwofish : public QObject
+{
+    Q_OBJECT
+private slots:
+    void test256();
+    void test192();
+    void test192_2();
+};
 
 void TestTwofish::test256() {
     mpz_class key;
@@ -46,10 +24,8 @@ void TestTwofish::test256() {
     mpz_class encrypted = twofish.encrypt(text);
     QVERIFY(encrypted_expected == encrypted);
 
-    mpz_class decrypted_expected;
-    decrypted_expected.set_str("00000000000000000000000000000000", 16);
     mpz_class decrypted = twofish.decrypt(encrypted);
-    QVERIFY(decrypted_expected == decrypted);
+    QVERIFY(text == decrypted);
 }
 
 void TestTwofish::test192() {
@@ -65,30 +41,26 @@ void TestTwofish::test192() {
     mpz_class encrypted = twofish.encrypt(text);
     QVERIFY(encrypted_expected == encrypted);
 
-    mpz_class decrypted_expected;
-    decrypted_expected.set_str("00000000000000000000000000000000", 16);
     mpz_class decrypted = twofish.decrypt(encrypted);
-    QVERIFY(decrypted_expected == decrypted);
+    QVERIFY(text == decrypted);
 }
 
-void TestTwofish::mul_gf() {
-    Twofish twofish(0, 0);
-    QVERIFY(0x0 == twofish.multiply_gf(0x0, 0x0));
-    QVERIFY(0x0 == twofish.multiply_gf(0xf3, 0x0));
-    QVERIFY(0xf3 == twofish.multiply_gf(0xf3, 0x1));
-    QVERIFY(0x1e6 == twofish.multiply_gf(0xf3, 0x2));
-    QVERIFY(0x115 == twofish.multiply_gf(0xf3, 0x3));
-    QVERIFY(0x139A == twofish.multiply_gf(0xb9, 0x2a));
-    QVERIFY(0xe4 == twofish.mod_gf(0x139a, 0x14d));
+void TestTwofish::test192_2() {
+    mpz_class key;
+    key.set_str("EFA71F788965BD4453F860178FC191010000000000000000", 16);
+    Twofish twofish(key, 192);
+
+    mpz_class text;
+    text.set_str("88B2B2706B105E36B446BB6D731A1E88", 16);
+
+    mpz_class encrypted_expected;
+    encrypted_expected.set_str("39DA69D6BA4997D585B6DC073CA341B2", 16);
+    mpz_class encrypted = twofish.encrypt(text);
+    QVERIFY(encrypted_expected == encrypted);
+
+    mpz_class decrypted = twofish.decrypt(encrypted);
+    QVERIFY(text == decrypted);
 }
 
-void TestTwofish::q0_q1() {
-    Twofish twofish(0, 0);
-    QVERIFY(0xa5 == twofish.q0(0x3a));
-    QVERIFY(0x64 == twofish.q1(0xbf));
-}
-
-#ifdef TEST
 QTEST_MAIN(TestTwofish)
 #include "testtwofish.moc"
-#endif

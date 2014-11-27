@@ -1,6 +1,13 @@
 #include "twofish.h"
 #include <QDebug>
 
+constexpr quint8 Twofish::RS_MATRIX[4][8];
+constexpr quint16 Twofish::RS_VECTOR;
+constexpr quint8 Twofish::MDS_MATRIX[4][4];
+constexpr quint16 Twofish::MDS_VECTOR;
+constexpr quint8 Twofish::Q0[4][16];
+constexpr quint8 Twofish::Q1[4][16];
+
 Twofish::Twofish(const mpz_class& key, int key_length) {
     key_shedule(key, key_length);
 }
@@ -9,31 +16,33 @@ void Twofish::key_shedule(const mpz_class &key, int key_length) {
     k = (key_length + 63) / 64;
     mpz_class extended_key = key << (k * 64 - key_length);
     key_length = k * 64;
-    quint32* m = split_mpz_32_little_endian(extended_key, key_length);
-    m_e = new quint32[k];
-    m_o = new quint32[k];
+    quint32* m = Twofish::split_mpz_32_little_endian(extended_key, key_length);
+    quint32* m_e = new quint32[k];
+    quint32* m_o = new quint32[k];
     for (int i = 0; i < k; i++) {
         m_e[i] = m[2 * i + 1];
         m_o[i] = m[2 * i];
     }
-    quint8* bytes = split_mpz_8(key, key_length);
+    quint8* bytes = Twofish::split_mpz_8(key, key_length);
     for (int i = 0; i < k; i++) {
-        quint8* tmp_s = multiply_gf(RS_MATRIX, bytes + 8 * i, RS_VECTOR);
-        s[k - i - 1] = make_from_bytes_reverse(tmp_s);
+        quint8* tmp_s = Twofish::multiply_gf(Twofish::RS_MATRIX, bytes + 8 * i, Twofish::RS_VECTOR);
+        s[k - i - 1] = Twofish::make_from_bytes_reverse(tmp_s);
         delete tmp_s;
     }
     quint32 p = (1 << 24) + (1 << 16) + (1 << 8) + 1; // 2 ^ 24 + 2 ^ 16 + 2 ^ 8 + 2 ^ 0
     for (int i = 0; i < 20; i++) {
         quint64 a = h(2 * i * p, m_o, k);
-        quint64 b = rol(h((2 * i + 1) * p, m_e, k), 8);
+        quint64 b = Twofish::rol(h((2 * i + 1) * p, m_e, k), 8);
         keys[2 * i] = (quint32)(a + b);
-        keys[2 * i + 1] = rol((quint32)(a + 2 * b),9);
+        keys[2 * i + 1] = Twofish::rol((quint32)(a + 2 * b),9);
     }
-    delete m;
+    delete[] m;
+    delete[] m_e;
+    delete[] m_o;
 }
 
 mpz_class Twofish::encrypt(const mpz_class &text) {
-    quint32* words = split_mpz_32_little_endian(text, 128);
+    quint32* words = Twofish::split_mpz_32_little_endian(text, 128);
     //whitening
     for (int i = 0; i < 4; i++) {
         words[i] ^= keys[i];
@@ -43,8 +52,8 @@ mpz_class Twofish::encrypt(const mpz_class &text) {
         std::pair<quint32, quint32> p = f(words[0], words[1], i);
         quint32 tmp0 = words[0];
         quint32 tmp1 = words[1];
-        words[0] = ror(words[2] ^ p.first, 1);
-        words[1] = rol(words[3], 1) ^ p.second;
+        words[0] = Twofish::ror(words[2] ^ p.first, 1);
+        words[1] = Twofish::rol(words[3], 1) ^ p.second;
         words[2] = tmp0;
         words[3] = tmp1;
     }
@@ -72,22 +81,22 @@ mpz_class Twofish::encrypt(const mpz_class &text) {
 //        c[i] = (words[i / 4] / (1 << (8 * (i % 4)))) % (1 << 8);
 //    }
 
-    return make_from_bytes(c, 16);
+    return Twofish::make_from_bytes(c, 16);
 }
 
 mpz_class Twofish::decrypt(const mpz_class &text) {
-    quint32* words = split_mpz_32_little_endian(text, 128);
+    quint32* words = Twofish::split_mpz_32_little_endian(text, 128);
     for (int i = 0; i < 4; i++) {
         words[i] ^= keys[i + 4];
     }
-    block_swap(words, words + 2);
-    block_swap(words + 1, words + 3);
+    Twofish::block_swap(words, words + 2);
+    Twofish::block_swap(words + 1, words + 3);
     for (int i = 15; i >= 0; i--) {
         std::pair<quint32, quint32> p = f(words[2], words[3], i);
         quint32 tmp0 = words[2];
         quint32 tmp1 = words[3];
-        words[2] = rol(words[0], 1) ^ p.first;
-        words[3] = ror(words[1] ^ p.second, 1);
+        words[2] = Twofish::rol(words[0], 1) ^ p.first;
+        words[3] = Twofish::ror(words[1] ^ p.second, 1);
         words[0] = tmp0;
         words[1] = tmp1;
     }
@@ -99,18 +108,12 @@ mpz_class Twofish::decrypt(const mpz_class &text) {
     for (int i = 0; i < 16; i++) {
         c[i] = (encrypted[i / 4] / (1 << (8 * (i % 4)))) % (1 << 8);
     }
-    return make_from_bytes(c, 16);
-}
-
-void Twofish::block_swap(quint32* a, quint32* b) {
-    *a ^= *b;
-    *b ^= *a;
-    *a ^= *b;
+    return Twofish::make_from_bytes(c, 16);
 }
 
 std::pair<quint32, quint32> Twofish::f(quint32 r0, quint32 r1, int round) {
     quint64 t0 = g(r0);
-    quint64 t1 = g(rol(r1, 8));
+    quint64 t1 = g(Twofish::rol(r1, 8));
     quint32 f0 = (quint32)(t0 + t1 + keys[2 * round + 8]);
     quint32 f1 = (quint32)(t0 + 2 * t1 + keys[2 * round + 9]);
     return std::pair<quint32, quint32>(f0, f1);
@@ -121,11 +124,11 @@ quint32 Twofish::g(quint32 word) {
 }
 
 quint32 Twofish::h(quint32 x, quint32* l, int k) {
-    quint8* y = split_32_8_reverse(x);
+    quint8* y = Twofish::split_32_8_reverse(x);
     quint8* lbytes;
     switch (k) {
     case 4:
-        lbytes = split_32_8_reverse(l[3]);
+        lbytes = Twofish::split_32_8_reverse(l[3]);
         y[0] = q1(y[0]) ^ lbytes[0];
         y[1] = q0(y[1]) ^ lbytes[1];
         y[2] = q0(y[2]) ^ lbytes[2];
@@ -133,7 +136,7 @@ quint32 Twofish::h(quint32 x, quint32* l, int k) {
         delete lbytes;
         k--;
     case 3:
-        lbytes = split_32_8_reverse(l[2]);
+        lbytes = Twofish::split_32_8_reverse(l[2]);
         y[0] = q1(y[0]) ^ lbytes[0];
         y[1] = q1(y[1]) ^ lbytes[1];
         y[2] = q0(y[2]) ^ lbytes[2];
@@ -141,8 +144,8 @@ quint32 Twofish::h(quint32 x, quint32* l, int k) {
         delete lbytes;
         k--;
     case 2:
-        quint8* lbytes1 = split_32_8_reverse(l[1]);
-        quint8* lbytes0 = split_32_8_reverse(l[0]);
+        quint8* lbytes1 = Twofish::split_32_8_reverse(l[1]);
+        quint8* lbytes0 = Twofish::split_32_8_reverse(l[0]);
         y[0] = q1(q0(q0(y[0]) ^ lbytes1[0]) ^ lbytes0[0]);
         y[1] = q0(q0(q1(y[1]) ^ lbytes1[1]) ^ lbytes0[1]);
         y[2] = q1(q1(q0(y[2]) ^ lbytes1[2]) ^ lbytes0[2]);
@@ -150,8 +153,8 @@ quint32 Twofish::h(quint32 x, quint32* l, int k) {
         delete lbytes1;
         delete lbytes0;
     }
-    quint8* tmp = multiply_gf(MDS_MATRIX, y, MDS_VECTOR);
-    quint32 result = make_from_bytes_reverse(tmp);
+    quint8* tmp = Twofish::multiply_gf(Twofish::MDS_MATRIX, y, Twofish::MDS_VECTOR);
+    quint32 result = Twofish::make_from_bytes_reverse(tmp);
     delete tmp;
     delete y;
     return result;
@@ -283,4 +286,10 @@ quint32 Twofish::rol(quint32 word, int bits) {
     quint32 right_bits = word << bits;
     quint32 left_bits = word >> (32 - bits);
     return right_bits + left_bits;
+}
+
+void Twofish::block_swap(quint32* a, quint32* b) {
+    *a ^= *b;
+    *b ^= *a;
+    *a ^= *b;
 }

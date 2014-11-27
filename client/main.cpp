@@ -1,9 +1,5 @@
 #include "mainwindow.h"
-#include "def.h"
 #include <QApplication>
-#include <QDebug>
-
-#ifndef TEST
 
 int main(int argc, char *argv[])
 {
@@ -13,5 +9,3 @@ int main(int argc, char *argv[])
 
     return a.exec();
 }
-
-#endif
