@@ -15,6 +15,7 @@ public:
     ClientInfo();
     ClientInfo(const QHostAddress& hostAddress, const RsaKey& publicKey);
     RsaKey& getPublicKey();
+    QHostAddress& getHostAddress();
     ~ClientInfo();
 };
 

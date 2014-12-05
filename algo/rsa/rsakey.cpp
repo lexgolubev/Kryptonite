@@ -1,4 +1,5 @@
 #include "rsakey.h"
+#include <QDebug>
 
 RsaKey::RsaKey() {
 
@@ -24,26 +25,25 @@ void RsaKey::set_module(mpz_class& value) {
 }
 
 QDataStream& operator <<(QDataStream& out,const RsaKey &key) {
-    const char* str = key.get_exp().get_str(16).c_str();
-    int length = mpz_sizeinbase(key.get_exp().get_mpz_t(), 16);
-    out.writeRawData(str, length);
+    QString exp = key.get_exp().get_str(16).c_str();
+    out << exp;
+    QString module = key.get_module().get_str(16).c_str();
+    out << module;
 
-    str = key.get_module().get_str(16).c_str();
-    length = mpz_sizeinbase(key.get_module().get_mpz_t(), 16);
     return out;
 }
 
 QDataStream& operator >>(QDataStream& in, RsaKey& key) {
-    char tmp[512];
+    QString exp_str;
+    QString module_str;
+    in >> exp_str >> module_str;
 
-    in.readRawData(tmp, 512);
     mpz_class exp;
-    exp.set_str(tmp, 16);
+    exp.set_str(exp_str.toStdString().c_str(), 16);
     key.set_exp(exp);
 
-    in.readRawData(tmp, 512);
     mpz_class module;
-    module.set_str(tmp, 16);
+    module.set_str(module_str.toStdString().c_str(), 16);
     key.set_module(module);
 
     return in;

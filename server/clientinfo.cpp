@@ -13,5 +13,9 @@ RsaKey& ClientInfo::getPublicKey() {
     return publicKey;
 }
 
+QHostAddress& ClientInfo::getHostAddress() {
+    return hostAddress;
+}
+
 ClientInfo::~ClientInfo() {
 }

@@ -1,39 +1,41 @@
-#include "server.h"
-#include <QDebug>
+#include <QtNetwork>
 
-Server::Server() {
-    QObject::connect(&server, &QTcpServer::newConnection,
-                     this, &Server::newConnection);
-    server.listen(QHostAddress::LocalHost);
+#include "connection.h"
+#include "server.h"
+
+Server::Server(QObject *parent)
+    : QTcpServer(parent)
+{
+    listen(QHostAddress::Any, PORT);
 }
 
-void Server::newConnection() {
-    QTcpSocket* incoming =  server.nextPendingConnection();
-    QHostAddress address =  incoming->peerAddress();
-    QDataStream stream(incoming);
+void Server::incomingConnection(qintptr socketDescriptor)
+{
+    Connection *connection = new Connection(this, this);
+    connection->setSocketDescriptor(socketDescriptor);
+    emit newConnection(connection);
+}
 
-    QString name;
-    RsaKey key;
-    stream << name;
-    stream << key;
-    qDebug() << name;
-    qDebug() << "exp = " << key.get_exp().get_str(16).c_str() << ", mod = " << key.get_module().get_str(16).c_str();
-
-    if (!activeClients.contains(name)) {
-        ClientInfo client(address, key);
-        activeClients.insert(name, client);
-    } else {
-        qDebug() << "This name already used. Please, select another name";
+bool Server::addClient(QString name, const ClientInfo& info) {
+    if (activeClients.contains(name)) {
+        return false;
     }
+    activeClients.insert(name, info);
+    return true;
+}
 
-    QString clientName;
-    while (incoming->state() == QAbstractSocket::SocketState::ConnectedState) {
-        stream >> clientName;
-        stream << activeClients.take(clientName).getPublicKey();
-    }
+int Server::size() {
+    return activeClients.size();
+}
+
+QList<QString> Server::clients() {
+    return activeClients.keys();
+}
+
+ClientInfo Server::getPeerByName(QString name) {
+    return activeClients.take(name);
 }
 
 Server::~Server() {
-    server.close();
     activeClients.clear();
 }

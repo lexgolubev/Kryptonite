@@ -4,11 +4,13 @@ CONFIG += console c++11
 
 SOURCES += main.cpp \
     server.cpp \
-    clientinfo.cpp
+    clientinfo.cpp \
+    connection.cpp
 
 HEADERS += \
     server.h \
-    clientinfo.h
+    clientinfo.h \
+    connection.h
 
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../algo/release/ -lalgo
