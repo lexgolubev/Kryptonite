@@ -16,4 +16,5 @@ void Server::incomingConnection(qintptr socketDescriptor)
 }
 
 Server::~Server() {
+    close();
 }

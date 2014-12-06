@@ -2,11 +2,9 @@
 #define CONNECTION_H
 
 #include <QHostAddress>
-#include <QString>
 #include <QTcpSocket>
+#include "rsa/rsakey.h"
 #include "server.h"
-
-static const int MaxBufferSize = 1024000;
 
 class Server;
 
@@ -16,17 +14,14 @@ class Connection : public QTcpSocket
 
 public:
     Connection(QObject *parent, Server* server);
-signals:
-
-protected:
 
 private slots:
     void processReadyRead();
 
 private:
-    void req_init();
-    void req_get_all_clients();
-    void req_get_peer_by_name();
+    void requestInit();
+    void requestGetAllClients();
+    void requestGetPeerByName();
 
     Server* server;
     QString name;

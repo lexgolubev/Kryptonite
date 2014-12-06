@@ -1,12 +1,8 @@
-#include <QtNetwork>
-
-#include "connection.h"
 #include "server.h"
 
-Server::Server(QObject *parent)
-    : QTcpServer(parent)
+Server::Server(int port, QObject *parent) : QTcpServer(parent)
 {
-    listen(QHostAddress::Any, PORT);
+    listen(QHostAddress::Any, port);
 }
 
 void Server::incomingConnection(qintptr socketDescriptor)
@@ -38,4 +34,5 @@ ClientInfo Server::getPeerByName(QString name) {
 
 Server::~Server() {
     activeClients.clear();
+    close();
 }

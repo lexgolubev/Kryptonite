@@ -1,12 +1,12 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <QtNetwork>
-#include <QVector>
+#include <QTcpServer>
+#include <QTcpSocket>
 #include <QMap>
 #include "connection.h"
 #include "clientinfo.h"
-#include "../algo/rsa/rsakey.h"
+#include "rsa/rsakey.h"
 
 class Connection;
 
@@ -14,16 +14,18 @@ class Server : public QTcpServer
 {
     Q_OBJECT
 private:
-    const int PORT = 8090;
     QMap<QString, ClientInfo> activeClients;
+
 public:
-    Server(QObject *parent = 0);
+    Server(int port, QObject *parent = 0);
+
     bool addClient(QString name, const ClientInfo& info);
-    int size();
-    QList<QString> clients();
     ClientInfo getPeerByName(QString name);
+    QList<QString> clients();
+    int size();
 
     ~Server();
+
 signals:
     void newConnection(Connection *connection);
 

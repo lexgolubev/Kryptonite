@@ -1,10 +1,9 @@
 #ifndef CLIENTINFO_H
 #define CLIENTINFO_H
 
-#include <QTcpSocket>
 #include <QHostAddress>
 
-#include "../algo/rsa/rsakey.h"
+#include "rsa/rsakey.h"
 
 class ClientInfo
 {

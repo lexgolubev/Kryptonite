@@ -1,37 +1,30 @@
 #include "connection.h"
 
-#include <QtNetwork>
-#include "rsa/rsakey.h"
-
 Connection::Connection(QObject *parent, Server* server)
     : QTcpSocket(parent)
 {
     this->server = server;
-
     QObject::connect(this, SIGNAL(readyRead()), this, SLOT(processReadyRead()));
 }
 
 void Connection::processReadyRead()
 {
-    qDebug() << "ready";
     QDataStream stream(this);
     do {
         QString request;
         stream >> request;
         if (request == "REQ_INIT") {
-            req_init();
+            requestInit();
         } else if (request == "REQ_GET_ALL_CLIENTS") {
-            req_get_all_clients();
+            requestGetAllClients();
         } else if (request == "REQ_GET_PEER_BY_NAME") {
-            req_get_peer_by_name();
+            requestGetPeerByName();
         }
     } while (bytesAvailable() > 0);
 }
 
-void Connection::req_init() {
+void Connection::requestInit() {
     QDataStream stream(this);
-
-    QHostAddress address = peerAddress();
 
     QString name;
     stream >> name;
@@ -41,6 +34,8 @@ void Connection::req_init() {
     RsaKey key;
     stream >> key;
     qDebug() << "exp = " << key.get_exp().get_str(16).c_str() << ", mod = " << key.get_module().get_str(16).c_str();
+
+    QHostAddress address = peerAddress();
 
     ClientInfo info(address, key);
 
@@ -52,7 +47,7 @@ void Connection::req_init() {
     stream << answer;
 }
 
-void Connection::req_get_all_clients() {
+void Connection::requestGetAllClients() {
     QDataStream stream(this);
     stream << (quint32)server->size() - 1;
     foreach (QString name, server->clients()) {
@@ -62,10 +57,12 @@ void Connection::req_get_all_clients() {
     }
 }
 
-void Connection::req_get_peer_by_name() {
+void Connection::requestGetPeerByName() {
     QDataStream stream(this);
+
     QString clientName;
     stream >> clientName;
+
     ClientInfo info = server->getPeerByName(clientName);
     stream << info.getHostAddress().toString();
     stream << info.getPublicKey();

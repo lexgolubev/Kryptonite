@@ -1,52 +1,47 @@
 #include "client.h"
-#include <QThread>
-#include "unistd.h"
 
-Client::Client(QString name, RsaKey public_key, RsaKey private_key, int port) {
-       //: public_key(public_key), private_key(private_key), name(name) {
-    this->public_key = public_key;
-    this->private_key = private_key;
+Client::Client(QString name, RsaKey publicKey, RsaKey privateKey, int localPort, QString serverIp, int serverPort) {
+    this->publicKey = publicKey;
+    this->privateKey = privateKey;
     this->name = name;
-    server = new Server(0, this, port);
+    server = new Server(0, this, localPort);
 
-    QHostAddress server_address(SERVER_IP);
-    server_socket.connectToHost(server_address, SERVER_PORT);
+    QHostAddress serverAddress(serverIp);
+    serverSocket.connectToHost(serverAddress, serverPort);
 
-    if (server_socket.waitForConnected()) {
+    if (serverSocket.waitForConnected()) {
         qDebug() << "connected successfully";
+        sendInitRequest(publicKey, name);
+        getAllClients();
     } else {
         qDebug() << "connection fail";
     }
-
-    send_init_req(public_key, name);
-
-    getAllClients();
 }
 
-void Client::send_init_req(RsaKey public_key, QString name)
+void Client::sendInitRequest(RsaKey publicKey, QString name)
 {
-    QDataStream stream(&server_socket);
+    QDataStream stream(&serverSocket);
     QString request = "REQ_INIT";
     stream << request;
     stream << name;
-    stream << public_key;
-    qDebug() << "key: exp = " << public_key.get_exp().get_str(16).c_str() << ", mod = " << public_key.get_module().get_str(16).c_str();
+    stream << publicKey;
+    qDebug() << "key: exp = " << publicKey.get_exp().get_str(16).c_str() << ", mod = " << publicKey.get_module().get_str(16).c_str();
 
-    server_socket.waitForReadyRead();
+    serverSocket.waitForReadyRead();
     QString answer;
     stream >> answer;
     qDebug() << answer;
 }
 
 void Client::connectToPeer(QString name) {
-    QDataStream stream(&server_socket);
+    QDataStream stream(&serverSocket);
 
     QString request = "REQ_GET_PEER_BY_NAME";
     stream << request;
 
     stream << name;
 
-    if (server_socket.waitForReadyRead()) {
+    if (serverSocket.waitForReadyRead()) {
         QString address;
         stream >> address;
 
@@ -57,20 +52,21 @@ void Client::connectToPeer(QString name) {
         qDebug() << "\taddress: " << address;
         qDebug() << "\tkey: " << "exp = " << key.get_exp().get_str(16).c_str() << ", mod = " << key.get_module().get_str(16).c_str();
 
-        Connection* friend_connection = new Connection(0, this, false, address, CLIENT_PORT);
+        //TODO: client port, arg #5
+        Connection* friendConnection = new Connection(0, this, false, address, 8091);
         QThread* thread = new QThread();
         thread->start();
+        friendConnection->moveToThread(thread);
         QObject::connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-        friend_connection->moveToThread(thread);
     }
 }
 
 void Client::getAllClients() {
-    QDataStream stream(&server_socket);
+    QDataStream stream(&serverSocket);
     QString req = "REQ_GET_ALL_CLIENTS";
     stream << req;
 
-    server_socket.waitForReadyRead();
+    serverSocket.waitForReadyRead();
     quint32 count;
     stream >> count;
     qDebug() << "clients" << count;
@@ -83,7 +79,7 @@ void Client::getAllClients() {
 }
 
 RsaKey Client::getPublicKey() {
-    return public_key;
+    return publicKey;
 }
 
 QString Client::getName() {
@@ -91,5 +87,5 @@ QString Client::getName() {
 }
 
 Client::~Client() {
-    server_socket.close();
+    serverSocket.close();
 }

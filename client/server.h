@@ -12,8 +12,6 @@ class Connection;
 class Server : public QTcpServer
 {
     Q_OBJECT
-private:
-    const int PORT = 8091;
 public:
     Server(QObject *parent, Client* client, int port);
     ~Server();
