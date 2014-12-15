@@ -10,11 +10,13 @@ class ClientInfo
 private:
     QHostAddress hostAddress;
     RsaKey publicKey;
+    int port;
 public:
     ClientInfo();
-    ClientInfo(const QHostAddress& hostAddress, const RsaKey& publicKey);
+    ClientInfo(const QHostAddress& hostAddress, int port, const RsaKey& publicKey);
     RsaKey& getPublicKey();
     QHostAddress& getHostAddress();
+    int getPort();
     ~ClientInfo();
 };
 

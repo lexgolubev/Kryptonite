@@ -9,45 +9,50 @@ Connection::Connection(QObject *parent, Server* server)
 
 void Connection::processReadyRead()
 {
+    qDebug() << "new data";
     QDataStream stream(this);
     do {
         QString request;
         stream >> request;
-        if (request == "REQ_INIT") {
-            requestInit();
-        } else if (request == "REQ_GET_ALL_CLIENTS") {
-            requestGetAllClients();
-        } else if (request == "REQ_GET_PEER_BY_NAME") {
-            requestGetPeerByName();
+        if (request == "REQUEST_CONNECT_SERVER") {
+            onRequestConnect();
+        } else if (request == "REQUEST_GET_ALL_CLIENTS") {
+            onRequestGetAllClients();
+        } else if (request == "REQUEST_GET_PEER_BY_NAME") {
+            onRequestGetPeerByName();
         }
     } while (bytesAvailable() > 0);
 }
 
-void Connection::requestInit() {
+void Connection::onRequestConnect() {
     QDataStream stream(this);
 
     QString name;
     stream >> name;
     this->name = name;
-    qDebug() << name;
 
     RsaKey key;
     stream >> key;
-    qDebug() << "exp = " << key.get_exp().get_str(16).c_str() << ", mod = " << key.get_module().get_str(16).c_str();
+
+    int port;
+    stream >> port;
 
     QHostAddress address = peerAddress();
 
-    ClientInfo info(address, key);
+    ClientInfo info(address, port, key);
 
-    if (!server->addClient(name, info)) {
+    if (server->addClient(name, info)) {
+        qDebug() << "client" << name << "connected";
+    } else {
         qDebug() << "This name already used. Please, select another name";
     }
 
-    QString answer = "OK";
+    QString answer = "CONNECT_OK";
     stream << answer;
 }
 
-void Connection::requestGetAllClients() {
+void Connection::onRequestGetAllClients() {
+    qDebug() << "getAllClients";
     QDataStream stream(this);
     stream << (quint32)server->size() - 1;
     foreach (QString name, server->clients()) {
@@ -55,9 +60,11 @@ void Connection::requestGetAllClients() {
             stream << name;
         }
     }
+    waitForBytesWritten();
 }
 
-void Connection::requestGetPeerByName() {
+void Connection::onRequestGetPeerByName() {
+    qDebug() << "getPeerByName";
     QDataStream stream(this);
 
     QString clientName;
@@ -65,5 +72,11 @@ void Connection::requestGetPeerByName() {
 
     ClientInfo info = server->getPeerByName(clientName);
     stream << info.getHostAddress().toString();
+    stream << info.getPort();
     stream << info.getPublicKey();
+    waitForBytesWritten();
+}
+
+QString Connection::getName() {
+    return name;
 }

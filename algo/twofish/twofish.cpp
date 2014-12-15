@@ -41,7 +41,7 @@ void Twofish::key_shedule(const mpz_class &key, int key_length) {
     delete[] m_o;
 }
 
-mpz_class Twofish::encrypt(const mpz_class &text) {
+mpz_class Twofish::encrypt_mpz(const mpz_class &text) {
     quint32* words = Twofish::split_mpz_32_little_endian(text, 128);
     //whitening
     for (int i = 0; i < 4; i++) {
@@ -62,7 +62,7 @@ mpz_class Twofish::encrypt(const mpz_class &text) {
 //        int i2 = ((i + 1) % 2) * 2;
 //        std::pair<quint32, quint32> p = f(words[i1], words[i1 + 1], i);
 //        words[i2] = ror(words[i2] ^ p.first, 1);
-//        words[i2 + 1] = rol(words[i2 + 1], 1) ^ p.second;
+//        words[i2 + 1] = rol(words[i2 +  1], 1) ^ p.second;
 //    }
     quint32 encrypted[4];
     for (int i = 0; i < 4; i++) {
@@ -84,7 +84,34 @@ mpz_class Twofish::encrypt(const mpz_class &text) {
     return Twofish::make_from_bytes(c, 16);
 }
 
-mpz_class Twofish::decrypt(const mpz_class &text) {
+mpz_class Twofish::encrypt_str(const char* text) {
+    mpz_class result;
+    int length = strlen(text);
+    //comment 1
+//    int k = (length + 127) / 128;
+//    for (int j = 0; j < k; j++) {
+//        result <<= 128;
+    //end comment 1
+        int buf_length = 32;
+        char* buf = new char[buf_length + 1];
+        memset(buf, 0, buf_length + 1);
+        for (int i = 0; i < 16 && i < length; i++) {
+            char ch;
+            sscanf(text + i, "%c", &ch);
+            sprintf(buf + 2 * i, "%x", (int)ch);
+        }
+        buf[buf_length] = '\0';
+
+        mpz_class mpz_text;
+        mpz_text.set_str(buf, 16);
+        //comment 2
+//        result += encrypt(mpz_text);
+//    }
+        //end comment 2
+    return encrypt_mpz(mpz_text);
+}
+
+mpz_class Twofish::decrypt_mpz(const mpz_class &text) {
     quint32* words = Twofish::split_mpz_32_little_endian(text, 128);
     for (int i = 0; i < 4; i++) {
         words[i] ^= keys[i + 4];
@@ -109,6 +136,19 @@ mpz_class Twofish::decrypt(const mpz_class &text) {
         c[i] = (encrypted[i / 4] / (1 << (8 * (i % 4)))) % (1 << 8);
     }
     return Twofish::make_from_bytes(c, 16);
+}
+
+char* Twofish::decrypt_str(const mpz_class& mpz_text) {
+    const char* decrypted_str = decrypt_mpz(mpz_text).get_str(16).c_str();
+    int length = strlen(decrypted_str);
+    char* res = new char[length / 2 + 1];
+    for (int i = 0; i < length / 2; i++) {
+        char tmp[2];
+        memcpy(tmp, decrypted_str + 2 * i, 2);
+        sscanf(tmp, "%x", res + i);
+    }
+    res[length / 2] = '\0';
+    return res;
 }
 
 std::pair<quint32, quint32> Twofish::f(quint32 r0, quint32 r1, int round) {
@@ -292,4 +332,42 @@ void Twofish::block_swap(quint32* a, quint32* b) {
     *a ^= *b;
     *b ^= *a;
     *a ^= *b;
+}
+
+//mpz_class Twofish::str_to_mpz(char *text) {
+//    char buf[33];
+//    memset(buf, 0, 33);
+//    int i = 0;
+//    while (i < 16 && (text[i] != '\0')) {
+//        char ch;
+//        sscanf(text + i, "%c", &ch);
+//        sprintf(buf + 2 * i, "%x", (int)ch);
+//        i++;
+//    }
+//    buf[2 * i] = '\0';
+
+//    mpz_class mpz_text;
+//    mpz_text.set_str(buf, 16);
+
+//    return mpz_text;//return 128-bit str
+//}
+
+//char* Twofish::mpz_to_str(const mpz_class &text) {
+//    const char* str = text.get_str(16).c_str();
+//    int length = strlen(str);
+//    char* res = new char[length / 2 + 1];
+//    for (int i = 0; i < length / 2; i++) {
+//        char tmp[2];
+//        memcpy(tmp, decrypted_str + 2 * i, 2);
+//        sscanf(tmp, "%x", res + i);
+//    }
+//    res[length / 2] = '\0';
+//    return res;
+//}
+
+mpz_class Twofish::generateKey() {
+    boost::random_device rand_device;
+    gmp_randclass rand(gmp_randinit_default);
+    rand.seed(rand_device());
+    return mpz_class(rand.get_z_bits(128));
 }

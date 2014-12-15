@@ -1,89 +1,124 @@
 #include "client.h"
+#include <iostream>
 
 Client::Client(QString name, RsaKey publicKey, RsaKey privateKey, int localPort, QString serverIp, int serverPort) {
     this->publicKey = publicKey;
     this->privateKey = privateKey;
     this->name = name;
+    this->localPort = localPort;
     server = new Server(0, this, localPort);
+    connect(server, SIGNAL(newConnection(Connection*)), this, SLOT(onNewConnection(Connection*)));
 
     QHostAddress serverAddress(serverIp);
     serverSocket.connectToHost(serverAddress, serverPort);
 
     if (serverSocket.waitForConnected()) {
         qDebug() << "connected successfully";
-        sendInitRequest(publicKey, name);
-        getAllClients();
+        connectToServer(publicKey, name);
     } else {
         qDebug() << "connection fail";
     }
 }
 
-void Client::sendInitRequest(RsaKey publicKey, QString name)
+bool Client::connectToServer(RsaKey publicKey, QString name)
 {
     QDataStream stream(&serverSocket);
-    QString request = "REQ_INIT";
+    QString request = "REQUEST_CONNECT_SERVER";
     stream << request;
     stream << name;
     stream << publicKey;
-    qDebug() << "key: exp = " << publicKey.get_exp().get_str(16).c_str() << ", mod = " << publicKey.get_module().get_str(16).c_str();
-
+    stream << localPort;
     serverSocket.waitForReadyRead();
     QString answer;
     stream >> answer;
-    qDebug() << answer;
+    return answer == "CONNECT_OK";
 }
 
 void Client::connectToPeer(QString name) {
     QDataStream stream(&serverSocket);
 
-    QString request = "REQ_GET_PEER_BY_NAME";
+    QString request = "REQUEST_GET_PEER_BY_NAME";
     stream << request;
 
     stream << name;
 
-    if (serverSocket.waitForReadyRead()) {
-        QString address;
-        stream >> address;
+    serverSocket.waitForReadyRead(5000);
+    QString address;
+    stream >> address;
 
-        RsaKey key;
-        stream >> key;
+    int port;
+    stream >> port;
 
-        qDebug() << "another user info:";
-        qDebug() << "\taddress: " << address;
-        qDebug() << "\tkey: " << "exp = " << key.get_exp().get_str(16).c_str() << ", mod = " << key.get_module().get_str(16).c_str();
+    RsaKey key;
+    stream >> key;
 
-        //TODO: client port, arg #5
-        Connection* friendConnection = new Connection(0, this, false, address, 8091);
-        QThread* thread = new QThread();
-        thread->start();
-        friendConnection->moveToThread(thread);
-        QObject::connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-    }
+//    qDebug() << "data recivied from server";
+
+//    qDebug() << "another user info:";
+//    qDebug() << "\taddress: " << address;
+//    qDebug() << "\tport: " << port;
+//    qDebug() << "\tkey: " << "exp = " << key.get_exp().get_str(16).c_str() << ", mod = " << key.get_module().get_str(16).c_str();
+
+    Connection* newConnection = new Connection(0, this, false, address, port);
+    QThread* thread = new QThread();
+    thread->start();
+    newConnection->moveToThread(thread);
+    QObject::connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+    connections[name] = newConnection;
+    connect(newConnection, SIGNAL(messageRecivied(QString)), this, SLOT(onMessageRecivied(QString)));
 }
 
-void Client::getAllClients() {
+QList<QString> Client::getAllClients() {
     QDataStream stream(&serverSocket);
-    QString req = "REQ_GET_ALL_CLIENTS";
+    QString req = "REQUEST_GET_ALL_CLIENTS";
     stream << req;
 
-    serverSocket.waitForReadyRead();
+    QList<QString> peers;
+    serverSocket.waitForReadyRead(5000);
     quint32 count;
     stream >> count;
-    qDebug() << "clients" << count;
     for (int i = 0; i < count; i++) {
         QString name;
         stream >> name;
-        qDebug() << name;
-        connectToPeer(name);
+        peers.push_back(name);
     }
+    return peers;
+}
+
+bool Client::sendMessage(QString destination, QString msg) {
+    return connections[destination]->sendMessage(msg);
+}
+
+void Client::onMessageRecivied(QString msg) {
+    Connection* connection = (Connection*)QObject::sender();
+    std::cout << "new message from " << connection->getPeerName().toStdString() << ":" << msg.toStdString();
+}
+
+void Client::onNewConnection(Connection *newConnection) {
+    connect(newConnection, SIGNAL(messageRecivied(QString)), this, SLOT(onMessageRecivied(QString)));
 }
 
 RsaKey Client::getPublicKey() {
     return publicKey;
 }
 
+RsaKey Client::getPrivateKey() {
+    return privateKey;
+}
+
 QString Client::getName() {
     return name;
+}
+
+void Client::addConnection(QString name, Connection* newconnection) {
+    connections[name] = newconnection;
+}
+
+void Client::onConnectionDisconnected() {
+    Connection* connection = (Connection*) sender();
+    qDebug() << "client" << connection->getPeerName() << "disconnected";
+    connections.remove(connection->getPeerName());
+    qDebug() << connections.keys();
 }
 
 Client::~Client() {

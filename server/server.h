@@ -29,6 +29,9 @@ public:
 signals:
     void newConnection(Connection *connection);
 
+public slots:
+    void onConnectionDisconnected();
+
 protected:
     void incomingConnection(qintptr socketDescriptor);
 };

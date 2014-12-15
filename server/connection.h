@@ -15,13 +15,15 @@ class Connection : public QTcpSocket
 public:
     Connection(QObject *parent, Server* server);
 
+    QString getName();
+
 private slots:
     void processReadyRead();
 
 private:
-    void requestInit();
-    void requestGetAllClients();
-    void requestGetPeerByName();
+    void onRequestConnect();
+    void onRequestGetAllClients();
+    void onRequestGetPeerByName();
 
     Server* server;
     QString name;

@@ -4,8 +4,8 @@ ClientInfo::ClientInfo() {
 
 }
 
-ClientInfo::ClientInfo(const QHostAddress& hostAddress, const RsaKey& publicKey) :
-    hostAddress(hostAddress), publicKey(publicKey) {
+ClientInfo::ClientInfo(const QHostAddress& hostAddress, int port, const RsaKey& publicKey) :
+    hostAddress(hostAddress), publicKey(publicKey), port(port) {
 
 }
 
@@ -15,6 +15,10 @@ RsaKey& ClientInfo::getPublicKey() {
 
 QHostAddress& ClientInfo::getHostAddress() {
     return hostAddress;
+}
+
+int ClientInfo::getPort() {
+    return port;
 }
 
 ClientInfo::~ClientInfo() {

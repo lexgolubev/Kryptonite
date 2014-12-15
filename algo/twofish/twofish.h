@@ -4,6 +4,7 @@
 #include <QtGlobal>
 #include <gmpxx.h>
 #include <utility>
+#include <boost/random/random_device.hpp>
 
 class Twofish
 {
@@ -65,11 +66,19 @@ private:
     static quint32 make_from_bytes_reverse(quint8* bytes);
 
     static void block_swap(quint32* a, quint32* b);
+
+//    static mpz_class str_to_mpz(char* text);
+//    static char* mpz_to_str(const mpz_class& text);
 public:
     Twofish(const mpz_class& key, int key_length);
 
-    mpz_class encrypt(const mpz_class& text);
-    mpz_class decrypt(const mpz_class& text);
+    mpz_class encrypt_mpz(const mpz_class& text);
+    mpz_class decrypt_mpz(const mpz_class& text);
+
+    mpz_class encrypt_str(const char* text);
+    char* decrypt_str(const mpz_class& text);
+
+    static mpz_class generateKey();
 };
 
 #endif // TWOFISH_H

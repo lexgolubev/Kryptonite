@@ -5,6 +5,8 @@
 #include <QString>
 #include <QTcpSocket>
 #include "client.h"
+#include "rsa/rsa.h"
+#include "twofish/twofish.h"
 
 class Client;
 
@@ -14,21 +16,24 @@ class Connection : public QTcpSocket
 public:
     Connection(QObject *parent, Client* client, bool connected = true, QString address = "",
                int port = 0);
+    bool sendMessage(QString msg);
+    QString getPeerName();
 signals:
-
-protected:
+    void messageRecivied(QString msg);
 
 private slots:
     void processReadyRead();
 
 private:
-    void req_init();
-    void req_msg();
-    bool send_msg(QString msg);
+    bool connectToPeer(QString address, int port);
+    bool onRequestConnect();
+    void onMessageRecivied();
     void req_get_peer_by_name();
-    void init_friend(QString address, int port);
-
+private:
     Client* client;
+    QString peerName;
+    mpz_class twofish_key;
+    Twofish* twofish;
 };
 
 #endif
