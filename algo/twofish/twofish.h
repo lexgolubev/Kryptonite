@@ -5,6 +5,7 @@
 #include <gmpxx.h>
 #include <utility>
 #include <boost/random/random_device.hpp>
+#include <bytearray.h>
 
 class Twofish
 {
@@ -69,6 +70,10 @@ private:
 
 //    static mpz_class str_to_mpz(char* text);
 //    static char* mpz_to_str(const mpz_class& text);
+    //encrypt and decrypt blocks only length of 128
+    ByteArray encrypt_qstr_128(const QString& text);
+    QString decrypt_qstr_128(const ByteArray& text);
+
 public:
     Twofish(const mpz_class& key, int key_length);
 
@@ -79,6 +84,9 @@ public:
     char* decrypt_str(const mpz_class& text);
 
     static mpz_class generateKey();
+
+    ByteArray encrypt_qstr(const QString& text);
+    QString decrypt_qstr(const ByteArray& text);
 };
 
 #endif // TWOFISH_H

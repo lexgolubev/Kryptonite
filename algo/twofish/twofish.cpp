@@ -371,3 +371,32 @@ mpz_class Twofish::generateKey() {
     rand.seed(rand_device());
     return mpz_class(rand.get_z_bits(128));
 }
+
+ByteArray Twofish::encrypt_qstr(const QString &text) {
+    int length = text.length();
+    int k = (length + 127) / 128;
+    QString justified_text = text.leftJustified(k * 128, '\n');
+    QString::iterator it = justified_text.begin();
+    ByteArray result;
+    for (int i = 0; i < k; i++) {
+        result += encrypt_qstr_128((QString)(it + 128));
+        it += 128;
+    }
+    return result;
+}
+
+QString Twofish::decrypt_qstr(const ByteArray &text) {
+    QString result;
+    int k = text.size() / 128;
+    ByteArray::const_iterator it = text.begin();
+    for (int i = 0; i < k; i++) {
+        result += decrypt_qstr_128((ByteArray)((const char*)(it + 128)));
+        it += 128;
+    }
+}
+
+ByteArray Twofish::encrypt_qstr_128(const QString &text) {
+}
+
+QString Twofish::decrypt_qstr_128(const ByteArray &text) {
+}
