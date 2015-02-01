@@ -393,10 +393,78 @@ QString Twofish::decrypt_qstr(const ByteArray &text) {
         result += decrypt_qstr_128((ByteArray)((const char*)(it + 128)));
         it += 128;
     }
+    return result;
 }
 
 ByteArray Twofish::encrypt_qstr_128(const QString &text) {
+    if (text.length() != 128) {
+        throw "Encryption error: block size != 128";
+    }
+    ByteArray arr(text);
+    arr.toLittleEndian();
+    char* data = (char*)arr;
+
+    quint32* words = (quint32*)data;
+    //whitening
+    for (int i = 0; i < 4; i++) {
+        words[i] ^= keys[i];
+    }
+    //fiestel
+    for (int i = 0; i < 16; i++) {
+        std::pair<quint32, quint32> p = f(words[0], words[1], i);
+        quint32 tmp0 = words[0];
+        quint32 tmp1 = words[1];
+        words[0] = Twofish::ror(words[2] ^ p.first, 1);
+        words[1] = Twofish::rol(words[3], 1) ^ p.second;
+        words[2] = tmp0;
+        words[3] = tmp1;
+    }
+    quint32 encrypted[4];
+    for (int i = 0; i < 4; i++) {
+        encrypted[i] = words[(i + 2) % 4] ^ keys[i + 4];
+    }
+    quint8 c[16];
+    for (int i = 0; i < 16; i++) {
+        c[i] = (encrypted[i / 4] / (1 << (8 * (i % 4)))) % (1 << 8);
+    }
+
+    ByteArray result(c, 16);
+    return result;
+
 }
 
 QString Twofish::decrypt_qstr_128(const ByteArray &text) {
+    if (text.length() != 128) {
+        throw "Decryption error: block size != 128";
+    }
+    ByteArray arr(text);
+    arr.toLittleEndian();
+    char* data = (char*)arr;
+
+    quint32* words = (quint32*)data;
+    for (int i = 0; i < 4; i++) {
+        words[i] ^= keys[i + 4];
+    }
+    Twofish::block_swap(words, words + 2);
+    Twofish::block_swap(words + 1, words + 3);
+    for (int i = 15; i >= 0; i--) {
+        std::pair<quint32, quint32> p = f(words[2], words[3], i);
+        quint32 tmp0 = words[2];
+        quint32 tmp1 = words[3];
+        words[2] = Twofish::rol(words[0], 1) ^ p.first;
+        words[3] = Twofish::ror(words[1] ^ p.second, 1);
+        words[0] = tmp0;
+        words[1] = tmp1;
+    }
+    quint32 encrypted[4];
+    for (int i = 0; i < 4; i++) {
+        encrypted[i] = words[i] ^ keys[i];
+    }
+    quint8 c[16];
+    for (int i = 0; i < 16; i++) {
+        c[i] = (encrypted[i / 4] / (1 << (8 * (i % 4)))) % (1 << 8);
+    }
+    ByteArray result_array(c, 16);
+    QString result = (char*)result_array;
+    return result;
 }

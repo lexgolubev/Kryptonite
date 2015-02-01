@@ -1,6 +1,7 @@
 #include <QtTest/QtTest>
 #include <iostream>
 #include "../algo/twofish/twofish.h"
+#include "../algo/bytearray.h"
 
 class TestTwofish : public QObject
 {
@@ -10,6 +11,8 @@ private slots:
     void test192();
     void test192_2();
     void testMpz();
+    void testByteArrayLittleEndian();
+    void testEncryptQstr();
 };
 
 void TestTwofish::test256() {
@@ -81,6 +84,29 @@ void TestTwofish::testMpz() {
 //    QVERIFY(text == decrypted);
 
     qDebug() << "res = " << decrypted;
+}
+
+void TestTwofish::testByteArrayLittleEndian() {
+    ByteArray arr("12345678");
+    arr.toLittleEndian();
+    qDebug() << arr;
+    qDebug() << (char*)arr;
+}
+
+void TestTwofish::testEncryptQstr() {
+    mpz_class key;
+    key.set_str("EFA71F788965BD4453F860178FC191010000000000000000", 16);
+    Twofish twofish(key, 192);
+
+    QString text = "";
+
+    QString encrypted_expected = "37527BE0052334B89F0CFCCAE87CFA20";
+    QString encrypted = twofish.encrypt_qstr(text);
+    qDebug() << "encrypted:" << encrypted;
+    QVERIFY(encrypted_expected == encrypted);
+
+    //mpz_class decrypted = twofish.decrypt_mpz(encrypted);
+    //QVERIFY(text == decrypted);
 }
 
 QTEST_MAIN(TestTwofish)
