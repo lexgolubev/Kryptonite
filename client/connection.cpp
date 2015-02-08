@@ -95,7 +95,7 @@ bool Connection::sendMessage(QString msg) {
     QString request = "MESSAGE";
     stream << request;
 //    stream << msg;
-    QString encrypted = twofish->encrypt_str(msg.toStdString().c_str()).get_str(16).c_str();
+    ByteArray encrypted = twofish->encrypt_qstr(msg);
     stream << encrypted;
 
     waitForReadyRead(5000);
@@ -110,11 +110,9 @@ bool Connection::sendMessage(QString msg) {
 void Connection::onMessageRecivied() {
     QDataStream stream(this);
 
-    QString msg;
-    stream >> msg;
-    mpz_class mpz_msg;
-    mpz_msg.set_str(msg.toStdString().c_str(), 16);
-    QString decrypted = twofish->decrypt_str(mpz_msg);
+    ByteArray encrypted;
+    stream >> encrypted;
+    QString decrypted = twofish->decrypt_qstr(encrypted);
 
     QString request = "MESSAGE_DELIVERED";
     stream << request;

@@ -6,6 +6,7 @@
 #include <utility>
 #include <boost/random/random_device.hpp>
 #include <bytearray.h>
+#include <QtEndian>
 
 class Twofish
 {
@@ -68,11 +69,9 @@ private:
 
     static void block_swap(quint32* a, quint32* b);
 
-//    static mpz_class str_to_mpz(char* text);
-//    static char* mpz_to_str(const mpz_class& text);
     //encrypt and decrypt blocks only length of 128
     ByteArray encrypt_qstr_128(const QString& text);
-    QString decrypt_qstr_128(const ByteArray& text);
+    ByteArray decrypt_qstr_128(const ByteArray& text);
 
 public:
     Twofish(const mpz_class& key, int key_length);
@@ -80,13 +79,11 @@ public:
     mpz_class encrypt_mpz(const mpz_class& text);
     mpz_class decrypt_mpz(const mpz_class& text);
 
-    mpz_class encrypt_str(const char* text);
-    char* decrypt_str(const mpz_class& text);
+    ByteArray encrypt_qstr(const QString& text);
+    QString decrypt_qstr(const ByteArray& text);
 
     static mpz_class generateKey();
 
-    ByteArray encrypt_qstr(const QString& text);
-    QString decrypt_qstr(const ByteArray& text);
 };
 
 #endif // TWOFISH_H

@@ -10,8 +10,6 @@ private slots:
     void test256();
     void test192();
     void test192_2();
-    void testMpz();
-    void testByteArrayLittleEndian();
     void testEncryptQstr();
 };
 
@@ -66,47 +64,19 @@ void TestTwofish::test192_2() {
     QVERIFY(text == decrypted);
 }
 
-void TestTwofish::testMpz() {
-    mpz_class key;
-    key.set_str("0123456789ABCDEFFEDCBA987654321000112233445566778899AABBCCDDEEFF", 16);
-    Twofish twofish(key, 256);
-
-    char str[] = "hello123  678901";
-
-    mpz_class encrypted_expected;
-    encrypted_expected.set_str("37527BE0052334B89F0CFCCAE87CFA20", 16);
-    mpz_class encrypted = twofish.encrypt_str(str);
-
-    qDebug() << "encr" << encrypted.get_str(16).c_str();
-//    QVERIFY(encrypted_expected == encrypted);
-
-    char* decrypted = twofish.decrypt_str(encrypted);
-//    QVERIFY(text == decrypted);
-
-    qDebug() << "res = " << decrypted;
-}
-
-void TestTwofish::testByteArrayLittleEndian() {
-    ByteArray arr("12345678");
-    arr.toLittleEndian();
-    qDebug() << arr;
-    qDebug() << (char*)arr;
-}
-
 void TestTwofish::testEncryptQstr() {
     mpz_class key;
-    key.set_str("EFA71F788965BD4453F860178FC191010000000000000000", 16);
-    Twofish twofish(key, 192);
+    key.set_str("00000000000000000000000000000000", 16);
+    Twofish twofish(key, 128);
 
-    QString text = "";
+    QString text = "qwertyuioopsdrueipuhreuiuetrp1234";
 
-    QString encrypted_expected = "37527BE0052334B89F0CFCCAE87CFA20";
-    QString encrypted = twofish.encrypt_qstr(text);
+    ByteArray encrypted = twofish.encrypt_qstr(text);
     qDebug() << "encrypted:" << encrypted;
-    QVERIFY(encrypted_expected == encrypted);
 
-    //mpz_class decrypted = twofish.decrypt_mpz(encrypted);
-    //QVERIFY(text == decrypted);
+    QString decrypted = twofish.decrypt_qstr(encrypted);
+    qDebug() << "decrypted: " << decrypted;
+    QVERIFY(text == decrypted);
 }
 
 QTEST_MAIN(TestTwofish)
