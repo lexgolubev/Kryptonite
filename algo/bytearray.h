@@ -1,6 +1,7 @@
 #ifndef BYTEARRAY_H
 #define BYTEARRAY_H
 
+#include <QDataStream>
 #include <QVector>
 #include <QString>
 
@@ -66,6 +67,19 @@ public:
             this->removeAt(i);
         }
     }
+
+    static void read(QDataStream& in, ByteArray& arr) {
+        in >> arr.msg_length;
+        in >> arr;
+    }
+
+    static void write(QDataStream& out, const ByteArray& arr) {
+        out << arr.msg_length;
+        out << arr;
+    }
+
 };
+
+
 
 #endif // BYTEARRAY_H

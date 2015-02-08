@@ -94,9 +94,10 @@ bool Connection::sendMessage(QString msg) {
 
     QString request = "MESSAGE";
     stream << request;
-//    stream << msg;
+
     ByteArray encrypted = twofish->encrypt_qstr(msg);
-    stream << encrypted;
+    ByteArray::write(stream, encrypted);
+    qDebug() << "send: " << encrypted << "msg_length " << encrypted.msg_length;
 
     waitForReadyRead(5000);
     QString answer;
@@ -111,17 +112,18 @@ void Connection::onMessageRecivied() {
     QDataStream stream(this);
 
     ByteArray encrypted;
-    stream >> encrypted;
+    ByteArray::read(stream, encrypted);
+
+    qDebug() << "recieved: " << encrypted << "msg_length " << encrypted.msg_length;
     QString decrypted = twofish->decrypt_qstr(encrypted);
 
     QString request = "MESSAGE_DELIVERED";
     stream << request;
 
     waitForBytesWritten();
-//    emit messageRecivied(msg);
+    emit messageRecivied(decrypted);
     qDebug() << "new message:";
     qDebug() << decrypted;
-//    qDebug() << msg;
 }
 
 QString Connection::getPeerName() {

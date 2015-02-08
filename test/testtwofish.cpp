@@ -66,7 +66,7 @@ void TestTwofish::test192_2() {
 
 void TestTwofish::testEncryptQstr() {
     mpz_class key;
-    key.set_str("00000000000000000000000000000000", 16);
+    key.set_str("00000000000000000011000000000000", 16);
     Twofish twofish(key, 128);
 
     QString text = "qwertyuioopsdrueipuhreuiuetrp1234";

@@ -340,7 +340,7 @@ ByteArray Twofish::encrypt_qstr_128(const QString &text) {
     ByteArray arr(text);
 //    no need cast to little endian convention
 //    because we are already use it (x86)
-//    May be need to check architecture?
+//    May be need check architecture?
 //    arr.toLittleEndian();
     char* data = (char*)arr;
 
