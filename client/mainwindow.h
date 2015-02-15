@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QKeyEvent>
+#include "keyeventfilter.h"
 
 namespace Ui {
 class MainWindow;
@@ -13,6 +15,11 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
+
+    bool sendMessage();
+
+    void addNewLine();
+
     ~MainWindow();
 
 private:
