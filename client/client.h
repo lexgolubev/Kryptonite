@@ -24,7 +24,7 @@ private:
     QString serverIp;
     int serverPort;
 
-    QTcpSocket serverSocket;
+    QTcpSocket* serverSocket;
     Server* server;
 
     QMap<QString, Connection*> connections;

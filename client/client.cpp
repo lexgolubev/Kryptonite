@@ -8,6 +8,7 @@ Client::Client(QString name, RsaKey publicKey, RsaKey privateKey, int localPort,
     this->localPort = localPort;
     this->serverIp = serverIp;
     this->serverPort = serverPort;
+    serverSocket = new QTcpSocket();
     server = new Server(0, this, localPort);
     QThread* thread = new QThread(this);
     thread->start();
@@ -16,8 +17,8 @@ Client::Client(QString name, RsaKey publicKey, RsaKey privateKey, int localPort,
 
 bool Client::connectToServer() {
     QHostAddress serverAddress(serverIp);
-    serverSocket.connectToHost(serverAddress, serverPort);
-    if (serverSocket.waitForConnected()) {
+    serverSocket->connectToHost(serverAddress, serverPort);
+    if (serverSocket->waitForConnected()) {
         qDebug() << "connected successfully";
         return connectToServer(publicKey, name);
     } else {
@@ -28,27 +29,27 @@ bool Client::connectToServer() {
 
 bool Client::connectToServer(RsaKey publicKey, QString name)
 {
-    QDataStream stream(&serverSocket);
+    QDataStream stream(serverSocket);
     QString request = "REQUEST_CONNECT_SERVER";
     stream << request;
     stream << name;
     stream << publicKey;
     stream << localPort;
-    serverSocket.waitForReadyRead();
+    serverSocket->waitForReadyRead();
     QString answer;
     stream >> answer;
     return answer == "CONNECT_OK";
 }
 
 void Client::connectToPeer(QString name) {
-    QDataStream stream(&serverSocket);
+    QDataStream stream(serverSocket);
 
     QString request = "REQUEST_GET_PEER_BY_NAME";
     stream << request;
 
     stream << name;
 
-    serverSocket.waitForReadyRead(5000);
+    serverSocket->waitForReadyRead(5000);
     QString address;
     stream >> address;
 
@@ -75,12 +76,12 @@ void Client::connectToPeer(QString name) {
 }
 
 QList<QString> Client::getAllClients() {
-    QDataStream stream(&serverSocket);
+    QDataStream stream(serverSocket);
     QString req = "REQUEST_GET_ALL_CLIENTS";
     stream << req;
 
     QList<QString> peers;
-    serverSocket.waitForReadyRead(5000);
+    serverSocket->waitForReadyRead(5000);
     quint32 count;
     stream >> count;
     for (int i = 0; i < count; i++) {
@@ -128,5 +129,5 @@ void Client::onConnectionDisconnected() {
 }
 
 Client::~Client() {
-    serverSocket.close();
+    serverSocket->close();
 }

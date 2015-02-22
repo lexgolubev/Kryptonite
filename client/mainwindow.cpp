@@ -14,12 +14,12 @@ MainWindow::MainWindow(QWidget *parent, QString serverIp, int serverPort,
     RsaKeyGenerator gen;
     gen.generate(1024);
 
-    client = new Client(name, gen.get_public_key(), gen.get_private_key(), localPort, serverIp, serverPort);
-    QThread* thread = new QThread();
+//    client = new Client(name, gen.get_public_key(), gen.get_private_key(), localPort, serverIp, serverPort);
+    QThread* thread = new ServerConnectionThread(name, gen.get_public_key(), gen.get_private_key(), localPort, serverIp, serverPort);
     thread->start();
-    client->moveToThread(thread);
-    connect(this, SIGNAL(connectToServer()), client, SLOT(connectToServer()));
-    emit connectToServer();
+//    client->moveToThread(thread);
+//    connect(this, SIGNAL(connectToServer()), client, SLOT(connectToServer()));
+//    emit connectToServer();
 }
 
 MainWindow::~MainWindow()

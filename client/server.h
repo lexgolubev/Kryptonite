@@ -2,7 +2,6 @@
 #define SERVER_H
 
 #include <QTcpServer>
-#include <QTcpSocket>
 #include "client.h"
 #include "connection.h"
 

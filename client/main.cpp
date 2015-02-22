@@ -49,14 +49,12 @@ public:
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
 
     RsaKeyGenerator gen;
     gen.generate(1024);
 
-    QString serverIp = "192.168.0.104";
-    int serverPort = 8090;
+    QString serverIp = "127.0.0.1";
+    int serverPort = 9000;
     QString name = "user";
     int localPort = 8091;
     if (a.arguments().size() >= 5) {
@@ -65,10 +63,9 @@ int main(int argc, char *argv[])
         name = a.arguments().at(3);
         localPort = a.arguments().at(4).toInt();
     }
-//    Client* client = new Client(name, gen.get_public_key(), gen.get_private_key(), localPort, serverIp, serverPort);
 
-//    QThread* thread = new ConsoleReaderThread(client);
-//    thread->start();
+    MainWindow* w = new MainWindow(0, serverIp, serverPort, name, localPort);
+    w->show();
 
     return a.exec();
 }
