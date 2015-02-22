@@ -6,18 +6,24 @@ Client::Client(QString name, RsaKey publicKey, RsaKey privateKey, int localPort,
     this->privateKey = privateKey;
     this->name = name;
     this->localPort = localPort;
+    this->serverIp = serverIp;
+    this->serverPort = serverPort;
     server = new Server(0, this, localPort);
+    QThread* thread = new QThread(this);
+    thread->start();
     connect(server, SIGNAL(newConnection(Connection*)), this, SLOT(onNewConnection(Connection*)));
+}
 
+bool Client::connectToServer() {
     QHostAddress serverAddress(serverIp);
     serverSocket.connectToHost(serverAddress, serverPort);
-
     if (serverSocket.waitForConnected()) {
         qDebug() << "connected successfully";
-        connectToServer(publicKey, name);
+        return connectToServer(publicKey, name);
     } else {
         qDebug() << "connection fail";
     }
+    return false;
 }
 
 bool Client::connectToServer(RsaKey publicKey, QString name)

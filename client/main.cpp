@@ -65,10 +65,10 @@ int main(int argc, char *argv[])
         name = a.arguments().at(3);
         localPort = a.arguments().at(4).toInt();
     }
-    Client* client = new Client(name, gen.get_public_key(), gen.get_private_key(), localPort, serverIp, serverPort);
+//    Client* client = new Client(name, gen.get_public_key(), gen.get_private_key(), localPort, serverIp, serverPort);
 
-    QThread* thread = new ConsoleReaderThread(client);
-    thread->start();
+//    QThread* thread = new ConsoleReaderThread(client);
+//    thread->start();
 
     return a.exec();
 }

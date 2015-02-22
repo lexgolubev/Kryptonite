@@ -21,6 +21,8 @@ private:
     RsaKey publicKey;
     RsaKey privateKey;
     int localPort;
+    QString serverIp;
+    int serverPort;
 
     QTcpSocket serverSocket;
     Server* server;
@@ -46,6 +48,7 @@ public slots:
     void onMessageRecivied(QString msg);
     void onNewConnection(Connection* newConnection);
     void onConnectionDisconnected();
+    bool connectToServer();
 };
 
 #endif // CLIENT_H
