@@ -22,6 +22,8 @@ Controller::Controller(QStringList args)
     server = new ServerConnectionThread(name, gen.get_public_key(), gen.get_private_key(),
                                         localPort, serverIp, serverPort);
     connect(server, SIGNAL(addUser(QString)), window, SLOT(addUser(QString)));
+    connect(server, SIGNAL(recieveMessage(QString,QString)), window, SLOT(recieveMessage(QString,QString)));
+    connect(window, SIGNAL(sendMessage(QString,QString)), server, SLOT(onSendMessage(QString, QString)));
     server->start();
 
 }

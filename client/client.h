@@ -44,6 +44,9 @@ public:
     QString getName();
 
     ~Client();
+
+signals:
+    void recieveMessage(QString user, QString msg);
 public slots:
     void onMessageRecivied(QString msg);
     void onNewConnection(Connection* newConnection);

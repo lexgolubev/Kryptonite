@@ -18,6 +18,7 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
+
     ~MainWindow();
 
 private slots:
@@ -27,6 +28,8 @@ private slots:
 
 public slots:
     void addUser(QString name);
+
+    void recieveMessage(QString user, QString message);
 
 signals:
     void connectToServer();

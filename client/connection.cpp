@@ -19,6 +19,7 @@ void Connection::processReadyRead()
     do {
         QString request;
         stream >> request;
+        qDebug() << request;
         if (request == "REQUEST_CONNECT") {
             onRequestConnect();
         } else if (request == "MESSAGE") {
@@ -58,6 +59,7 @@ bool Connection::onRequestConnect() {
 }
 
 bool Connection::connectToPeer(QString address, int port) {
+    qDebug() << "connect to " << address << ":" << port;
     twofish_key = Twofish::generateKey();
 
     this->connectToHost(address, port);
@@ -95,6 +97,7 @@ bool Connection::sendMessage(QString msg) {
     QString request = "MESSAGE";
     stream << request;
 
+    qDebug() << "send msg: " << msg;
     ByteArray encrypted = twofish->encrypt_qstr(msg);
     ByteArray::write(stream, encrypted);
     qDebug() << "send: " << encrypted << "msg_length " << encrypted.msg_length;

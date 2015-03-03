@@ -98,7 +98,9 @@ bool Client::sendMessage(QString destination, QString msg) {
 
 void Client::onMessageRecivied(QString msg) {
     Connection* connection = (Connection*)QObject::sender();
-    std::cout << "new message from " << connection->getPeerName().toStdString() << ":" << msg.toStdString();
+    QString user = connection->getPeerName();
+    std::cout << "new message from " << user.toStdString() << ":" << msg.toStdString();
+    emit recieveMessage(user, msg);
 }
 
 void Client::onNewConnection(Connection *newConnection) {

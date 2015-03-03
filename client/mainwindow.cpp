@@ -19,7 +19,10 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::sendMessage() {
-    QString user = "user1";//ui->listWidgetUsers->currentItem()->text();
+    QString user = "user1";
+    if (ui->listWidgetUsers->currentRow() >= 0) {
+        user = ui->listWidgetUsers->currentItem()->text();
+    }
     QString message = ui->textEditMessage->toPlainText();
     emit sendMessage(user, message);
     ui->textEditMessage->setPlainText("");
@@ -34,4 +37,9 @@ void MainWindow::addNewLine() {
 
 void MainWindow::addUser(QString name) {
     ui->listWidgetUsers->addItem(name);
+}
+
+void MainWindow::recieveMessage(QString user, QString message) {
+    QString text = user + ": " + message + "\n";
+    ui->textEditHistory->append(text);
 }
