@@ -17,22 +17,23 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0, QString serverIp = QString("127.0.0.1"),
-                        int serverPort = 9000, QString name = QString("user"), int localPort = 8091);
+    explicit MainWindow(QWidget *parent = 0);
+    ~MainWindow();
 
-    bool sendMessage();
+private slots:
+    void sendMessage();
 
     void addNewLine();
 
-    ~MainWindow();
+public slots:
+    void addUser(QString name);
 
 signals:
     void connectToServer();
+    void sendMessage(QString user, QString message);
 
 private:
     Ui::MainWindow *ui;
-
-//    Client* client;
 };
 
 #endif // MAINWINDOW_H

@@ -4,6 +4,8 @@
 #include "client.h"
 #include "rsa/rsakeygenerator.h"
 
+#include "controller.h"
+
 #define MAX_MSG_LENGTH 100
 
 class ConsoleReaderThread : public QThread {
@@ -49,24 +51,7 @@ public:
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-
-    RsaKeyGenerator gen;
-    gen.generate(1024);
-
-    QString serverIp = "127.0.0.1";
-    int serverPort = 9000;
-    QString name = "user";
-    int localPort = 8091;
-    if (a.arguments().size() >= 5) {
-        serverIp = a.arguments().at(1);
-        serverPort = a.arguments().at(2).toInt();
-        name = a.arguments().at(3);
-        localPort = a.arguments().at(4).toInt();
-    }
-
-    MainWindow* w = new MainWindow(0, serverIp, serverPort, name, localPort);
-    w->show();
-
+    Controller ctrl(a.arguments());
     return a.exec();
 }
 

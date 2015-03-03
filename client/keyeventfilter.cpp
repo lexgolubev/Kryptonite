@@ -1,6 +1,6 @@
 #include "keyeventfilter.h"
 
-KeyEventFilter::KeyEventFilter(MainWindow* parent) : parent(parent) {
+KeyEventFilter::KeyEventFilter(QObject* parent) : QObject(parent) {
 }
 
 bool KeyEventFilter::eventFilter(QObject *obj, QEvent *event) {
@@ -12,9 +12,9 @@ bool KeyEventFilter::eventFilter(QObject *obj, QEvent *event) {
             Qt::KeyboardModifiers modifiers = eventKey->modifiers();
             bool shift = modifiers.testFlag(Qt::KeyboardModifier::ShiftModifier);
             if (!shift) {
-                parent->sendMessage();
+                emit sendMessage();
             } else {
-                parent->addNewLine();
+                emit addNewLine();
             }
             return true;
         }

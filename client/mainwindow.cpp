@@ -1,8 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-MainWindow::MainWindow(QWidget *parent, QString serverIp, int serverPort,
-                       QString name, int localPort) :
+MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
@@ -10,16 +9,8 @@ MainWindow::MainWindow(QWidget *parent, QString serverIp, int serverPort,
     KeyEventFilter* filter = new KeyEventFilter(this);
     ui->listWidgetUsers->installEventFilter(filter);
     ui->textEditMessage->installEventFilter(filter);
-
-    RsaKeyGenerator gen;
-    gen.generate(1024);
-
-//    client = new Client(name, gen.get_public_key(), gen.get_private_key(), localPort, serverIp, serverPort);
-    QThread* thread = new ServerConnectionThread(name, gen.get_public_key(), gen.get_private_key(), localPort, serverIp, serverPort);
-    thread->start();
-//    client->moveToThread(thread);
-//    connect(this, SIGNAL(connectToServer()), client, SLOT(connectToServer()));
-//    emit connectToServer();
+    connect(filter, SIGNAL(sendMessage()), this, SLOT(sendMessage()));
+    connect(filter, SIGNAL(addNewLine()), this, SLOT(addNewLine()));
 }
 
 MainWindow::~MainWindow()
@@ -27,12 +18,11 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-bool MainWindow::sendMessage() {
-//    QString user = ui->listWidgetUsers->currentItem()->text();
+void MainWindow::sendMessage() {
+    QString user = "user1";//ui->listWidgetUsers->currentItem()->text();
     QString message = ui->textEditMessage->toPlainText();
-    //TODO: send msg
+    emit sendMessage(user, message);
     ui->textEditMessage->setPlainText("");
-    return true;
 }
 
 void MainWindow::addNewLine() {
@@ -40,4 +30,8 @@ void MainWindow::addNewLine() {
     text += "\n";
     ui->textEditMessage->setPlainText(text);
     ui->textEditMessage->moveCursor(QTextCursor::End);
+}
+
+void MainWindow::addUser(QString name) {
+    ui->listWidgetUsers->addItem(name);
 }

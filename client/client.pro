@@ -19,14 +19,16 @@ SOURCES += main.cpp\
     server.cpp \
     connection.cpp \
     keyeventfilter.cpp \
-    serverconnectionthread.cpp
+    serverconnectionthread.cpp \
+    controller.cpp
 
 HEADERS  += mainwindow.h \
     client.h \
     server.h \
     connection.h \
     keyeventfilter.h \
-    serverconnectionthread.h
+    serverconnectionthread.h \
+    controller.h
 
 FORMS    += mainwindow.ui
 

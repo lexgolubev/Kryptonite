@@ -3,22 +3,21 @@
 
 #include <QtGlobal>
 #include <QKeyEvent>
-#include "mainwindow.h"
 #include <QDebug>
-
-class MainWindow;
 
 class KeyEventFilter : public QObject
 {
+    Q_OBJECT
 public:
-    KeyEventFilter(MainWindow* parent);
+    KeyEventFilter(QObject* parent = 0);
 
     bool eventFilter(QObject *obj, QEvent *event);
 
     ~KeyEventFilter();
 
-private:
-    MainWindow* parent;
+signals:
+    void sendMessage();
+    void addNewLine();
 };
 
 #endif // KEYEVENTFILTER_H
