@@ -17,7 +17,8 @@ public:
     Connection(QObject *parent, Client* client, bool connected = true, QString address = "",
                int port = 0);
     bool sendMessage(QString msg);
-    QString getPeerName();
+    QString getName();
+    void setName(QString peerName);
 signals:
     void messageRecivied(QString msg);
 

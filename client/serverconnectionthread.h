@@ -4,20 +4,21 @@
 #include <QThread>
 #include <QString>
 #include "client.h"
+#include <QEventLoop>
 
 class ServerConnectionThread : public QThread
 {
     Q_OBJECT
     void run() Q_DECL_OVERRIDE {
-        qDebug() << "started";
+        QEventLoop loop;
         client = new Client(name, publicKey, privateKey, localPort, serverIp, serverPort);
         client->connectToServer();
-        connect(client, SIGNAL(recieveMessage(QString, QString)), this, SIGNAL(recieveMessage(QString,QString)));
+        connect(client, SIGNAL(recieveMessage(QString, QString)), this, SLOT(onMessageRecivied(QString,QString)));
         foreach (QString user, client->getAllClients()) {
             emit addUser(user);
             client->connectToPeer(user);
-            qDebug() << "user: " << user;
         }
+        loop.exec();
     }
 public:
     ServerConnectionThread(QString name, RsaKey publicKey, RsaKey privateKey,
@@ -30,8 +31,9 @@ signals:
     void recieveMessage(QString user, QString message);
 
 private slots:
-    void onMessageRecivied(QString message) {
-        emit recieveMessage(name, message);
+    void onMessageRecivied(QString user, QString message) {
+        qDebug() << "user rcv:" << user;
+        emit recieveMessage(user, message);
     }
 
 public slots:

@@ -67,6 +67,7 @@ void Client::connectToPeer(QString name) {
 //    qDebug() << "\tkey: " << "exp = " << key.get_exp().get_str(16).c_str() << ", mod = " << key.get_module().get_str(16).c_str();
 
     Connection* newConnection = new Connection(0, this, false, address, port);
+    newConnection->setName(name);
     QThread* thread = new QThread();
     thread->start();
     newConnection->moveToThread(thread);
@@ -98,8 +99,9 @@ bool Client::sendMessage(QString destination, QString msg) {
 
 void Client::onMessageRecivied(QString msg) {
     Connection* connection = (Connection*)QObject::sender();
-    QString user = connection->getPeerName();
-    std::cout << "new message from " << user.toStdString() << ":" << msg.toStdString();
+    QString user = connection->getName();
+    qDebug() << "new message from " << user << ":" << msg;
+    qDebug() << "client.recieve user:" << user;
     emit recieveMessage(user, msg);
 }
 
@@ -125,8 +127,8 @@ void Client::addConnection(QString name, Connection* newconnection) {
 
 void Client::onConnectionDisconnected() {
     Connection* connection = (Connection*) sender();
-    qDebug() << "client" << connection->getPeerName() << "disconnected";
-    connections.remove(connection->getPeerName());
+    qDebug() << "client" << connection->getName() << "disconnected";
+    connections.remove(connection->getName());
     qDebug() << connections.keys();
 }
 

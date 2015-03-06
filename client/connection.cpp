@@ -16,10 +16,11 @@ Connection::Connection(QObject *parent, Client* client, bool connected, QString 
 void Connection::processReadyRead()
 {
     QDataStream stream(this);
+    qDebug() << "ready read begin";
     do {
         QString request;
         stream >> request;
-        qDebug() << request;
+        qDebug() << "ready read while";
         if (request == "REQUEST_CONNECT") {
             onRequestConnect();
         } else if (request == "MESSAGE") {
@@ -63,7 +64,10 @@ bool Connection::connectToPeer(QString address, int port) {
     twofish_key = Twofish::generateKey();
 
     this->connectToHost(address, port);
-    waitForConnected(5000);
+    if (!waitForConnected(5000)) {
+        qDebug() << "failed to connect";
+        return false;
+    }
     QDataStream friend_stream(this);
 
     QString request = "REQUEST_CONNECT";
@@ -71,7 +75,10 @@ bool Connection::connectToPeer(QString address, int port) {
     friend_stream << client->getName();
     friend_stream << client->getPublicKey();
 
-    waitForReadyRead(5000);
+    if (!waitForReadyRead(5000)) {
+        qDebug() << "no data recieved";
+        return false;
+    }
     RsaKey friend_public_key;
     friend_stream >> friend_public_key;
 
@@ -125,10 +132,14 @@ void Connection::onMessageRecivied() {
 
     waitForBytesWritten();
     emit messageRecivied(decrypted);
-    qDebug() << "new message:";
+    qDebug() << "new message in connection from:" << peerName;
     qDebug() << decrypted;
 }
 
-QString Connection::getPeerName() {
+QString Connection::getName() {
     return peerName;
+}
+
+void Connection::setName(QString peerName) {
+    this->peerName = peerName;
 }
