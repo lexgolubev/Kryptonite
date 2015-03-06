@@ -6,7 +6,7 @@
 #include "connection.h"
 
 class Client;
-class Connection;
+//class Connection;
 
 class Server : public QTcpServer
 {

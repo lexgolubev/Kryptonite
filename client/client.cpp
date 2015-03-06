@@ -8,10 +8,14 @@ Client::Client(QString name, RsaKey publicKey, RsaKey privateKey, int localPort,
     this->localPort = localPort;
     this->serverIp = serverIp;
     this->serverPort = serverPort;
+
     serverSocket = new QTcpSocket();
+
     server = new Server(0, this, localPort);
+
     QThread* thread = new QThread(this);
     thread->start();
+
     connect(server, SIGNAL(newConnection(Connection*)), this, SLOT(onNewConnection(Connection*)));
 }
 
@@ -59,21 +63,20 @@ void Client::connectToPeer(QString name) {
     RsaKey key;
     stream >> key;
 
-//    qDebug() << "data recivied from server";
-
-//    qDebug() << "another user info:";
-//    qDebug() << "\taddress: " << address;
-//    qDebug() << "\tport: " << port;
-//    qDebug() << "\tkey: " << "exp = " << key.get_exp().get_str(16).c_str() << ", mod = " << key.get_module().get_str(16).c_str();
-
-    Connection* newConnection = new Connection(0, this, false, address, port);
+    Connection* newConnection = new Connection(0);
+    newConnection->setPeer(name);
+    newConnection->setFriendRsaKey(key);
+    newConnection->setOwnPrivateKey(privateKey);
+    newConnection->setOwnPublicKey(publicKey);
     newConnection->setName(name);
+    newConnection->connectToPeer(address, port);
+
     QThread* thread = new QThread();
-    thread->start();
     newConnection->moveToThread(thread);
+    thread->start();
     QObject::connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-    connections[name] = newConnection;
-    connect(newConnection, SIGNAL(messageRecivied(QString)), this, SLOT(onMessageRecivied(QString)));
+    addConnection(name, newConnection);
+    onNewConnection(newConnection);
 }
 
 QList<QString> Client::getAllClients() {
@@ -99,7 +102,7 @@ bool Client::sendMessage(QString destination, QString msg) {
 
 void Client::onMessageRecivied(QString msg) {
     Connection* connection = (Connection*)QObject::sender();
-    QString user = connection->getName();
+    QString user = connection->getPeer();
     qDebug() << "new message from " << user << ":" << msg;
     qDebug() << "client.recieve user:" << user;
     emit recieveMessage(user, msg);
@@ -127,8 +130,8 @@ void Client::addConnection(QString name, Connection* newconnection) {
 
 void Client::onConnectionDisconnected() {
     Connection* connection = (Connection*) sender();
-    qDebug() << "client" << connection->getName() << "disconnected";
-    connections.remove(connection->getName());
+    qDebug() << "client" << connection->getPeer() << "disconnected";
+    connections.remove(connection->getPeer());
     qDebug() << connections.keys();
 }
 

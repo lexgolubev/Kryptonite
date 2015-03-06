@@ -1,26 +1,17 @@
 #include "connection.h"
 
-#include <QtNetwork>
-#include "rsa/rsakey.h"
-
-Connection::Connection(QObject *parent, Client* client, bool connected, QString address, int port)
+Connection::Connection(QObject *parent)
     : QTcpSocket(parent)
 {
-    this->client = client;
-    if (!connected) {
-        connectToPeer(address, port);
-    }
     QObject::connect(this, SIGNAL(readyRead()), this, SLOT(processReadyRead()));
 }
 
 void Connection::processReadyRead()
 {
     QDataStream stream(this);
-    qDebug() << "ready read begin";
     do {
         QString request;
         stream >> request;
-        qDebug() << "ready read while";
         if (request == "REQUEST_CONNECT") {
             onRequestConnect();
         } else if (request == "MESSAGE") {
@@ -35,27 +26,26 @@ bool Connection::onRequestConnect() {
 
     QString name;
     stream >> name;
+    setPeer(name);
     qDebug() << "user" << name << "try to connect";
 
     RsaKey key;
     stream >> key;
+    setFriendRsaKey(key);
 
-    stream << client->getPublicKey();
-
-    waitForReadyRead();
     QString key_str;
     stream >> key_str;
-
     twofish_key.set_str(key_str.toStdString().c_str(), 16);
-    twofish_key = Rsa::crypt(twofish_key, client->getPrivateKey());
+    twofish_key = Rsa::crypt(twofish_key, ownPrivateKey);
     twofish = new Twofish(twofish_key, 128);
 
     QString answer = "REQUEST_CONNECT_OK";
     stream << answer;
 
     waitForBytesWritten();
-    client->addConnection(name, this);
+
     qDebug() << "connected";
+
     return true;
 }
 
@@ -68,26 +58,21 @@ bool Connection::connectToPeer(QString address, int port) {
         qDebug() << "failed to connect";
         return false;
     }
+    this->blockSignals(true);
     QDataStream friend_stream(this);
 
     QString request = "REQUEST_CONNECT";
     friend_stream << request;
-    friend_stream << client->getName();
-    friend_stream << client->getPublicKey();
+    friend_stream << name;
+    friend_stream << ownPublicKey;
 
-    if (!waitForReadyRead(5000)) {
-        qDebug() << "no data recieved";
-        return false;
-    }
-    RsaKey friend_public_key;
-    friend_stream >> friend_public_key;
-
-    QString s = Rsa::crypt(twofish_key, friend_public_key).get_str(16).c_str();
+    QString s = Rsa::crypt(twofish_key, friendRsaKey).get_str(16).c_str();
     friend_stream << s;
 
-    waitForReadyRead(5000);
+    waitForReadyRead(10000);
     QString answer;
     friend_stream >> answer;
+    this->blockSignals(false);
     if (answer == "REQUEST_CONNECT_OK") {
         twofish = new Twofish(twofish_key, 128);
         qDebug() << "connected";
@@ -107,7 +92,6 @@ bool Connection::sendMessage(QString msg) {
     qDebug() << "send msg: " << msg;
     ByteArray encrypted = twofish->encrypt_qstr(msg);
     ByteArray::write(stream, encrypted);
-    qDebug() << "send: " << encrypted << "msg_length " << encrypted.msg_length;
 
     waitForReadyRead(5000);
     QString answer;
@@ -132,14 +116,30 @@ void Connection::onMessageRecivied() {
 
     waitForBytesWritten();
     emit messageRecivied(decrypted);
-    qDebug() << "new message in connection from:" << peerName;
+    qDebug() << "new message from:" << peer;
     qDebug() << decrypted;
 }
 
-QString Connection::getName() {
-    return peerName;
+QString Connection::getPeer() {
+    return peer;
 }
 
-void Connection::setName(QString peerName) {
-    this->peerName = peerName;
+void Connection::setPeer(QString peerName) {
+    this->peer = peerName;
+}
+
+void Connection::setFriendRsaKey(RsaKey key) {
+    friendRsaKey = key;
+}
+
+void Connection::setOwnPrivateKey(RsaKey key) {
+    ownPrivateKey = key;
+}
+
+void Connection::setOwnPublicKey(RsaKey key) {
+    ownPublicKey = key;
+}
+
+void Connection::setName(QString name) {
+    this->name = name;
 }

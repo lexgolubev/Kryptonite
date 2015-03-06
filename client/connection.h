@@ -1,40 +1,48 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-#include <QHostAddress>
+#include <QtNetwork>
 #include <QString>
-#include <QTcpSocket>
-#include "client.h"
 #include "rsa/rsa.h"
 #include "twofish/twofish.h"
-
-class Client;
 
 class Connection : public QTcpSocket
 {
     Q_OBJECT
+
 public:
-    Connection(QObject *parent, Client* client, bool connected = true, QString address = "",
-               int port = 0);
+    Connection(QObject *parent);
+    bool connectToPeer(QString address, int port);
     bool sendMessage(QString msg);
-    QString getName();
-    void setName(QString peerName);
+
+    QString getPeer();
+
+    void setPeer(QString peer);
+    void setName(QString name);
+    void setFriendRsaKey(RsaKey key);
+    void setOwnPublicKey(RsaKey key);
+    void setOwnPrivateKey(RsaKey key);
+
 signals:
     void messageRecivied(QString msg);
+    void addConnection(QString name, Connection* connection);
 
 private slots:
     void processReadyRead();
 
 private:
-    bool connectToPeer(QString address, int port);
     bool onRequestConnect();
     void onMessageRecivied();
-    void req_get_peer_by_name();
+
 private:
-    Client* client;
-    QString peerName;
     mpz_class twofish_key;
     Twofish* twofish;
+
+    QString peer;
+    QString name;
+    RsaKey friendRsaKey;
+    RsaKey ownPublicKey;
+    RsaKey ownPrivateKey;
 };
 
 #endif

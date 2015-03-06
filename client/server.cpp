@@ -10,8 +10,11 @@ Server::Server(QObject *parent, Client* client, int port)
 
 void Server::incomingConnection(qintptr socketDescriptor)
 {
-    Connection *connection = new Connection(0, client);
+    Connection *connection = new Connection(0);
     connection->setSocketDescriptor(socketDescriptor);
+    connection->setOwnPrivateKey(client->getPrivateKey());
+    connection->setOwnPublicKey(client->getPublicKey());
+    connection->setName(client->getName());
     emit newConnection(connection);
 }
 
