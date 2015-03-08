@@ -7,10 +7,13 @@ Server::Server(int port, QObject *parent) : QTcpServer(parent)
 
 void Server::incomingConnection(qintptr socketDescriptor)
 {
-    Connection *connection = new Connection(this, this);
+    Connection *connection = new Connection(this);
     connection->setSocketDescriptor(socketDescriptor);
-    connect(connection, SIGNAL(disconnected()), this, SLOT(onConnectionDisconnected()));
-    emit newConnection(connection);
+    connect(connection, SIGNAL(disconnected()),         this, SLOT(onConnectionDisconnected()));
+    connect(connection, SIGNAL(requestConnect()),       this, SLOT(onRequestConnect()));
+    connect(connection, SIGNAL(requestGetAllClients()), this, SLOT(onRequestGetAllClients()));
+    connect(connection, SIGNAL(requestGetPeerByName()), this, SLOT(onRequestGetPeerByName()));
+    emit connected(connection);
 }
 
 bool Server::addClient(QString name, const ClientInfo& info) {
@@ -18,22 +21,9 @@ bool Server::addClient(QString name, const ClientInfo& info) {
         qDebug() << "contains" << name;
         return false;
     }
-//    activeClients.insert(name, info);
     activeClients[name] = info;
     qDebug() << "clients" << activeClients.keys();
     return true;
-}
-
-int Server::size() {
-    return activeClients.size();
-}
-
-QList<QString> Server::clients() {
-    return activeClients.keys();
-}
-
-ClientInfo Server::getPeerByName(QString name) {
-    return activeClients[name];
 }
 
 void Server::onConnectionDisconnected() {
@@ -41,6 +31,63 @@ void Server::onConnectionDisconnected() {
     qDebug() << "client" << connection->getName() << "disconnected";
     activeClients.remove(connection->getName());
     qDebug() << activeClients.keys();
+}
+
+void Server::onRequestConnect() {
+    Connection* connection = qobject_cast<Connection*>(sender());
+
+    QDataStream stream(connection);
+
+    QString name;
+    stream >> name;
+    connection->setName(name);
+
+    RsaKey key;
+    stream >> key;
+
+    int port;
+    stream >> port;
+
+    QHostAddress address = connection->peerAddress();
+
+    ClientInfo info(address, port, key);
+
+    if (this->addClient(name, info)) {
+        qDebug() << "client" << name << "connected";
+    } else {
+        qDebug() << "This name already used. Please, select another name";
+    }
+
+    QString answer = "CONNECT_OK";
+    stream << answer;
+}
+
+void Server::onRequestGetAllClients() {
+    qDebug() << "getAllClients";
+    Connection* connection = qobject_cast<Connection*>(sender());
+    QDataStream stream(connection);
+    stream << (quint32)activeClients.size() - 1;
+    foreach (QString name, activeClients.keys()) {
+        if (connection->getName() != name) {
+            stream << name;
+        }
+    }
+    connection->waitForBytesWritten();
+}
+
+void Server::onRequestGetPeerByName() {
+    qDebug() << "getPeerByName";
+    Connection* connection = qobject_cast<Connection*>(sender());
+    QDataStream stream(connection);
+
+    QString clientName;
+    stream >> clientName;
+
+    ClientInfo info = activeClients[clientName];
+    stream << info.getHostAddress().toString();
+    stream << info.getPort();
+    stream << info.getPublicKey();
+    connection->waitForBytesWritten();
 }
 
 Server::~Server() {

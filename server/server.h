@@ -2,38 +2,37 @@
 #define SERVER_H
 
 #include <QTcpServer>
-#include <QTcpSocket>
+#include <QHostAddress>
 #include <QMap>
 #include "connection.h"
 #include "clientinfo.h"
 #include "rsa/rsakey.h"
 
-class Connection;
-
 class Server : public QTcpServer
 {
     Q_OBJECT
-private:
-    QMap<QString, ClientInfo> activeClients;
 
 public:
     Server(int port, QObject *parent = 0);
 
-    bool addClient(QString name, const ClientInfo& info);
-    ClientInfo getPeerByName(QString name);
-    QList<QString> clients();
-    int size();
-
     ~Server();
 
 signals:
-    void newConnection(Connection *connection);
+    void connected(Connection *connection);
 
-public slots:
+private slots:
+    void onRequestConnect();
+    void onRequestGetAllClients();
+    void onRequestGetPeerByName();
     void onConnectionDisconnected();
 
 protected:
     void incomingConnection(qintptr socketDescriptor);
+
+private:
+    QMap<QString, ClientInfo> activeClients;
+
+    bool addClient(QString name, const ClientInfo& info);
 };
 
 #endif // SERVER_H
