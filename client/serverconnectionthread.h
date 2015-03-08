@@ -3,15 +3,15 @@
 
 #include <QThread>
 #include <QString>
-#include "client.h"
 #include <QEventLoop>
+#include "client.h"
 
 class ServerConnectionThread : public QThread
 {
     Q_OBJECT
     void run() Q_DECL_OVERRIDE {
         QEventLoop loop;
-        client = new Client(name, publicKey, privateKey, localPort, serverIp, serverPort);
+        client = new Client(name, localPort, serverIp, serverPort);
         client->connectToServer();
         connect(client, SIGNAL(recieveMessage(QString, QString)), this, SLOT(onMessageRecivied(QString,QString)));
         foreach (QString user, client->getAllClients()) {
@@ -21,8 +21,7 @@ class ServerConnectionThread : public QThread
         loop.exec();
     }
 public:
-    ServerConnectionThread(QString name, RsaKey publicKey, RsaKey privateKey,
-                           int localPort, QString serverIp, int serverPort);
+    ServerConnectionThread(QString name, int localPort, QString serverIp, int serverPort);
     ~ServerConnectionThread();
 
 signals:

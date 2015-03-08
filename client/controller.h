@@ -8,7 +8,6 @@
 #include "mainwindow.h"
 #include "serverconnectionthread.h"
 #include "client.h"
-#include "rsa/rsakeygenerator.h"
 
 class Controller : public QObject
 {

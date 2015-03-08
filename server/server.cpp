@@ -21,7 +21,6 @@ bool Server::addClient(QString name, const ClientInfo& info) {
 //    activeClients.insert(name, info);
     activeClients[name] = info;
     qDebug() << "clients" << activeClients.keys();
-    qDebug() << "clients connected" << activeClients.size();
     return true;
 }
 

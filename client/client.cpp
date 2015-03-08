@@ -1,9 +1,11 @@
 #include "client.h"
-#include <iostream>
 
-Client::Client(QString name, RsaKey publicKey, RsaKey privateKey, int localPort, QString serverIp, int serverPort) {
-    this->publicKey = publicKey;
-    this->privateKey = privateKey;
+Client::Client(QString name, int localPort, QString serverIp, int serverPort) {
+    RsaKeyGenerator gen;
+    gen.generate(1024);
+
+    this->publicKey = gen.get_public_key();
+    this->privateKey = gen.get_private_key();
     this->name = name;
     this->localPort = localPort;
     this->serverIp = serverIp;
@@ -88,7 +90,7 @@ QList<QString> Client::getAllClients() {
     serverSocket->waitForReadyRead(5000);
     quint32 count;
     stream >> count;
-    for (int i = 0; i < count; i++) {
+    for (unsigned int i = 0; i < count; i++) {
         QString name;
         stream >> name;
         peers.push_back(name);

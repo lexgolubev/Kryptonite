@@ -8,6 +8,7 @@
 #include "rsa/rsakey.h"
 #include "server.h"
 #include "connection.h"
+#include "rsa/rsakeygenerator.h"
 
 class Server;
 
@@ -30,7 +31,7 @@ private:
     QMap<QString, Connection*> connections;
 
 public:
-    Client(QString name, RsaKey publicKey, RsaKey privateKey, int localPort, QString serverIp, int serverPort);
+    Client(QString name, int localPort, QString serverIp, int serverPort);
 
     bool connectToServer(RsaKey publicKey, QString name);
     void addConnection(QString name, Connection* newconnection);

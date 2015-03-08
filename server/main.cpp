@@ -1,13 +1,13 @@
-#include <iostream>
+#include <QDebug>
 #include "server.h"
 #include <QCoreApplication>
 
 int main(int argc, char* argv[]) {
     QCoreApplication app(argc, argv);
 
-    std::cout << "Server started\n";
+    qDebug() << "Server started\n";
     int port = app.arguments().at(1).toInt();
-    Server* server = new Server(port);
+    Server server(port);
 
     return app.exec();
 }
