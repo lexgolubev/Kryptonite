@@ -54,7 +54,7 @@ bool Connection::connectToPeer(QString address, int port) {
     twofish_key = Twofish::generateKey();
 
     this->connectToHost(address, port);
-    if (!waitForConnected(5000)) {
+    if (!waitForConnected(PING_TIMEOUT)) {
         qDebug() << "failed to connect";
         return false;
     }
@@ -69,7 +69,7 @@ bool Connection::connectToPeer(QString address, int port) {
     QString s = Rsa::crypt(twofish_key, friendRsaKey).get_str(16).c_str();
     friend_stream << s;
 
-    waitForReadyRead(10000);
+    waitForReadyRead(PING_TIMEOUT);
     QString answer;
     friend_stream >> answer;
     this->blockSignals(false);
@@ -93,7 +93,7 @@ bool Connection::sendMessage(QString msg) {
     ByteArray encrypted = twofish->encrypt_qstr(msg);
     ByteArray::write(stream, encrypted);
 
-    waitForReadyRead(5000);
+    waitForReadyRead(PING_TIMEOUT);
     QString answer;
     stream >> answer;
     if(answer == "MESSAGE_DELIVERED") {

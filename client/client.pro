@@ -20,7 +20,9 @@ SOURCES += main.cpp\
     connection.cpp \
     keyeventfilter.cpp \
     serverconnectionthread.cpp \
-    controller.cpp
+    controller.cpp \
+    dht.cpp \
+    kademlia.cpp
 
 HEADERS  += mainwindow.h \
     client.h \
@@ -28,7 +30,9 @@ HEADERS  += mainwindow.h \
     connection.h \
     keyeventfilter.h \
     serverconnectionthread.h \
-    controller.h
+    controller.h \
+    dht.h \
+    kademlia.h
 
 FORMS    += mainwindow.ui
 

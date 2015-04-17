@@ -10,6 +10,8 @@ class Connection : public QTcpSocket
 {
     Q_OBJECT
 
+    static constexpr int PING_TIMEOUT = 10000;
+
 public:
     Connection(QObject *parent);
     bool connectToPeer(QString address, int port);
