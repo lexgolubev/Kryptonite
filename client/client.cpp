@@ -47,13 +47,13 @@ bool Client::connectToServer(RsaKey publicKey, QString name)
     return answer == "CONNECT_OK";
 }
 
-void Client::connectToPeer(QString name) {
+void Client::connectToPeer(QString peerName) {
     QDataStream stream(serverSocket);
 
     QString request = "REQUEST_GET_PEER_BY_NAME";
     stream << request;
 
-    stream << name;
+    stream << peerName;
 
     serverSocket->waitForReadyRead(5000);
     QString address;
@@ -66,7 +66,7 @@ void Client::connectToPeer(QString name) {
     stream >> key;
 
     Connection* newConnection = new Connection(0);
-    newConnection->setPeer(name);
+    newConnection->setPeer(peerName);
     newConnection->setFriendRsaKey(key);
     newConnection->setOwnPrivateKey(privateKey);
     newConnection->setOwnPublicKey(publicKey);
@@ -77,7 +77,7 @@ void Client::connectToPeer(QString name) {
     newConnection->moveToThread(thread);
     thread->start();
     QObject::connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-    addConnection(name, newConnection);
+    addConnection(peerName, newConnection);
     onNewConnection(newConnection);
 }
 
@@ -99,7 +99,11 @@ QList<QString> Client::getAllClients() {
 }
 
 bool Client::sendMessage(QString destination, QString msg) {
+    if (connections.find(destination) == connections.end()) {
+        connectToPeer(destination);
+    }
     return connections[destination]->sendMessage(msg);
+
 }
 
 void Client::onMessageRecivied(QString msg) {

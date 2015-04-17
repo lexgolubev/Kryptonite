@@ -18,6 +18,11 @@ class ServerConnectionThread : public QThread
             emit addUser(user);
             client->connectToPeer(user);
         }
+
+        QTimer *timer = new QTimer();
+        connect(timer, SIGNAL(timeout()), this, SLOT(onTimerTick()));
+        timer->start(10000);
+
         loop.exec();
     }
 public:
@@ -33,6 +38,12 @@ private slots:
     void onMessageRecivied(QString user, QString message) {
         qDebug() << "user rcv:" << user;
         emit recieveMessage(user, message);
+    }
+
+    void onTimerTick() {
+        foreach (QString user, client->getAllClients()) {
+            emit addUser(user);
+        }
     }
 
 public slots:

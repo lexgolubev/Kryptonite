@@ -14,6 +14,7 @@ void Server::incomingConnection(qintptr socketDescriptor)
     connection->setSocketDescriptor(socketDescriptor);
     connection->setOwnPrivateKey(client->getPrivateKey());
     connection->setOwnPublicKey(client->getPublicKey());
+    qDebug() << "name:" << client->getName();
     connection->setName(client->getName());
     emit newConnection(connection);
 }

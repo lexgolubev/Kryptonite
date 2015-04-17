@@ -27,6 +27,7 @@ void MainWindow::sendMessage() {
     if (message.length() != 0) {
         emit sendMessage(user, message);
         ui->textEditMessage->setPlainText("");
+        recieveMessage("I", message);
     }
 }
 
@@ -38,10 +39,12 @@ void MainWindow::addNewLine() {
 }
 
 void MainWindow::addUser(QString name) {
-    ui->listWidgetUsers->addItem(name);
+    if (ui->listWidgetUsers->findItems(name, Qt::MatchExactly).size() == 0) {
+        ui->listWidgetUsers->addItem(name);
+    }
 }
 
 void MainWindow::recieveMessage(QString user, QString message) {
-    QString text = user + ": " + message + "\n";
+    QString text = user + ": " + message;
     ui->textEditHistory->append(text);
 }
