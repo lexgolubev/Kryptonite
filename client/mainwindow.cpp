@@ -13,11 +13,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(filter, SIGNAL(addNewLine()), this, SLOT(addNewLine()));
 }
 
-MainWindow::~MainWindow()
-{
-    delete ui;
-}
-
 void MainWindow::sendMessage() {
     QString user = "user1";
     if (ui->listWidgetUsers->currentRow() >= 0) {
@@ -29,6 +24,11 @@ void MainWindow::sendMessage() {
         ui->textEditMessage->setPlainText("");
         recieveMessage("I", message);
     }
+}
+
+void MainWindow::recieveMessage(QString user, QString message) {
+    QString text = user + ": " + message;
+    ui->textEditHistory->append(text);
 }
 
 void MainWindow::addNewLine() {
@@ -44,12 +44,10 @@ void MainWindow::addUser(QString name) {
     }
 }
 
-void MainWindow::recieveMessage(QString user, QString message) {
-    QString text = user + ": " + message;
-    ui->textEditHistory->append(text);
+void MainWindow::on_sendButton_clicked() {
+    sendMessage();
 }
 
-void MainWindow::on_sendButton_clicked()
-{
-    sendMessage();
+MainWindow::~MainWindow() {
+    delete ui;
 }
