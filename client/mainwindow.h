@@ -26,6 +26,8 @@ private slots:
 
     void addNewLine();
 
+    void on_sendButton_clicked();
+
 public slots:
     void addUser(QString name);
 
