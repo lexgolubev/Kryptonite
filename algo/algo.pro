@@ -4,7 +4,8 @@
 #
 #-------------------------------------------------
 
-QT       -= gui
+QT -= gui
+QT += network
 
 TARGET = algo
 TEMPLATE = lib
@@ -15,14 +16,16 @@ SOURCES += \
     rsa/rsa.cpp \
     rsa/rsakey.cpp \
     rsa/rsakeygenerator.cpp \
-    twofish/twofish.cpp
+    twofish/twofish.cpp \
+    dht.cpp
 
 HEADERS += \
     rsa/rsa.h \
     rsa/rsakey.h \
     rsa/rsakeygenerator.h \
     twofish/twofish.h \
-    bytearray.h
+    bytearray.h \
+    dht.h
 
 LIBS += -lgmp -lboost_random
 
