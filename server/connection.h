@@ -18,6 +18,7 @@ signals:
     void requestGetAllClients();
     void requestGetPeerByName();
     void broadcastInfo();
+    void requestGetPeers(int size);
 
 private slots:
     void processReadyRead();

@@ -8,6 +8,9 @@
 #include "clientinfo.h"
 #include "rsa/rsakey.h"
 
+//This is bootstrap server
+//client can request list of posible connected peers
+//used only on boot client
 class Server : public QTcpServer
 {
     Q_OBJECT
@@ -25,6 +28,7 @@ private slots:
     void onRequestGetAllClients();
     void onRequestGetPeerByName();
     void onConnectionDisconnected();
+    void onRequestGetPeers(int size);
 
 protected:
     void incomingConnection(qintptr socketDescriptor);

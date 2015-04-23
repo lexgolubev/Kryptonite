@@ -13,6 +13,7 @@ void Server::incomingConnection(qintptr socketDescriptor)
     connect(connection, SIGNAL(requestConnect()),       this, SLOT(onRequestConnect()));
     connect(connection, SIGNAL(requestGetAllClients()), this, SLOT(onRequestGetAllClients()));
     connect(connection, SIGNAL(requestGetPeerByName()), this, SLOT(onRequestGetPeerByName()));
+    connect(connection, SIGNAL(requestGetPeers(int)),   this, SLOT(onRequestGetPeers(int)));
     emit connected(connection);
 }
 
@@ -87,6 +88,31 @@ void Server::onRequestGetPeerByName() {
     stream << info.getHostAddress().toString();
     stream << info.getPort();
     stream << info.getPublicKey();
+    connection->waitForBytesWritten();
+}
+
+void Server::onRequestGetPeers(int size) {
+    Connection* connection = qobject_cast<Connection*>(sender());
+    QDataStream stream(connection);
+
+    auto values = activeClients.values();
+    if (values.size() < size) {
+        foreach (ClientInfo info, values) {
+            stream << info.getHostAddress().toString();
+            stream << info.getPort();
+        }
+        QString end = "END";
+        stream << end;
+    } else {
+        int random = qrand() % size;
+        for (int i = 0; i < size; i++) {
+            ClientInfo info = values[random];
+            stream << info.getHostAddress().toString();
+            stream << info.getPort();
+        }
+        QString end = "END";
+        stream << end;
+    }
     connection->waitForBytesWritten();
 }
 

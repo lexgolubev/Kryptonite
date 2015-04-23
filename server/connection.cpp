@@ -18,6 +18,10 @@ void Connection::processReadyRead()
             emit requestGetAllClients();
         } else if (request == "REQUEST_GET_PEER_BY_NAME") {
             emit requestGetPeerByName();
+        } else if (request == "REQUEST_GET_PEERS") {
+            int size;
+            stream >> size;
+            emit requestGetPeers(size);
         }
     } while (bytesAvailable() > 0);
 }
