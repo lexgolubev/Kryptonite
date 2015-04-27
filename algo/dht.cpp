@@ -1,6 +1,6 @@
 #include "dht.h"
 
-Dht::Dht() : bootstrapSocket(nullptr)
+Dht::Dht(int port, QObject *parent) : Server(port, parent), bootstrapSocket(nullptr)
 {
 }
 
@@ -30,6 +30,17 @@ QList<QPair<QString, int>> Dht::getListOfPosibleUsers(int size) {
         stream >> ip;
     }
     return result;
+}
+
+void Dht::connectToPosibleUsers() {
+    QList<QPair<QString, int>> list = getListOfPosibleUsers(CONNECTION_COUNT);
+    for (auto it = list.begin(); it != list.end(); ++it) {
+        QTcpSocket* connection = new QTcpSocket();
+        connection->connectToHost(it->first, it->second);
+        if (connection->waitForConnected()) {
+            servers.push_back(connection);
+        }
+    }
 }
 
 Dht::~Dht()
