@@ -3,17 +3,16 @@
 
 #include <QPair>
 #include <QtNetwork>
-#include <../server/server.h>
 
-//implement simple dht (like Gnutella)
+//implement dht (like Gnutella)
 
-class Dht : public Server
+class Dht : public QObject
 {
     Q_OBJECT
 private:
     static constexpr int CONNECTION_COUNT = 2;
 public:
-    Dht(int port, QObject *parent = 0);
+    Dht();
 
     //set bootsrap server, must be called before getListOfPosibleUsers
     void setBootstrapServer(QString ip, int port);
@@ -22,6 +21,8 @@ public:
     QList<QPair<QString, int>> getListOfPosibleUsers(int size);
 
     void connectToPosibleUsers();
+
+    QList<QString> getAllClients();
 
     ~Dht();
 private:

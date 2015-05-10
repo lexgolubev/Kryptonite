@@ -1,6 +1,6 @@
 #include "dht.h"
 
-Dht::Dht(int port, QObject *parent) : Server(port, parent), bootstrapSocket(nullptr)
+Dht::Dht() : bootstrapSocket(nullptr)
 {
 }
 
@@ -39,8 +39,28 @@ void Dht::connectToPosibleUsers() {
         connection->connectToHost(it->first, it->second);
         if (connection->waitForConnected()) {
             servers.push_back(connection);
+        } else {
+            connection->deleteLater();
         }
     }
+}
+
+QList<QString> Dht::getAllClients() {
+    QList<QString> clients;
+    foreach (QTcpSocket* socket, servers) {
+        QDataStream stream(socket);
+        QString request = "GET_ALL_CLIENTS";
+        stream << request;
+        socket->waitForBytesWritten();
+        int count;
+        stream >> count;
+        for (int i = 0; i < count; i++) {
+            QString name;
+            stream >> name;
+            clients.push_back(name);
+        }
+    }
+    return clients;
 }
 
 Dht::~Dht()
