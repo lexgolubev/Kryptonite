@@ -14,8 +14,7 @@ void Dht::setBootstrapServer(QString ip, int port) {
 
 QList<QPair<QString, int>> Dht::getListOfPosibleUsers(int size) {
     QDataStream stream(bootstrapSocket);
-    QString request = "REQUEST_GET_PEERS";
-    stream << request;
+    stream << DhtCode::REQUEST_GET_PEERS;
     stream << size;
     bootstrapSocket->waitForReadyRead();
 
@@ -49,8 +48,7 @@ QList<QString> Dht::getAllClients() {
     QList<QString> clients;
     foreach (QTcpSocket* socket, servers) {
         QDataStream stream(socket);
-        QString request = "GET_ALL_CLIENTS";
-        stream << request;
+        stream << DhtCode::REQUEST_GET_ALL_CLIENTS;
         socket->waitForBytesWritten();
         int count;
         stream >> count;
@@ -63,8 +61,47 @@ QList<QString> Dht::getAllClients() {
     return clients;
 }
 
+ClientInfo Dht::getInfo(QString name) {
+    ClientInfo info;
+    foreach (QTcpSocket* socket, servers) {
+        QDataStream stream(socket);
+
+        stream << DhtCode::REQUEST_GET_USER_INFO;
+        socket->waitForReadyRead();
+
+        DhtCode answer;
+        stream >> answer;
+        if (answer == DhtCode::ANSWER_GET_USER_INFO) {
+            stream >> info;
+        }
+    }
+    return info;
+}
+
+bool Dht::connectToUser(const ClientInfo& userInfo) {
+    QTcpSocket* socket = new QTcpSocket(this);
+    socket->connectToHost(userInfo.getHostAddress(), userInfo.getPort());
+    if (socket->waitForConnected()) {
+        activeUsers[userInfo.getName()] = socket;
+        return true;
+    } else {
+        return false;
+    }
+}
+
 Dht::~Dht()
 {
 
 }
 
+QDataStream& operator <<(QDataStream& out, const DhtCode& code) {
+    out << static_cast<std::underlying_type<DhtCode>::type>(code);
+    return out;
+}
+
+QDataStream& operator >>(QDataStream& in, DhtCode& code) {
+    int value;
+    in >> value;
+    code = static_cast<DhtCode>(value);
+    return in;
+}

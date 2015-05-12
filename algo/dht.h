@@ -3,6 +3,7 @@
 
 #include <QPair>
 #include <QtNetwork>
+#include "clientinfo.h"
 
 //implement dht (like Gnutella)
 
@@ -24,11 +25,31 @@ public:
 
     QList<QString> getAllClients();
 
+    ClientInfo getInfo(QString name);
+
+    bool connectToUser(const ClientInfo& userInfo);
+
     ~Dht();
 private:
     QTcpSocket* bootstrapSocket;
 
     QList<QTcpSocket*> servers;
+
+    QMap<QString, QTcpSocket*> activeUsers;
 };
+
+enum DhtCode {
+    REQUEST_GET_PEERS,
+    REQUEST_GET_ALL_CLIENTS,
+    REQUEST_GET_USER_INFO,
+    ANSWER_END,
+    ANSWER_GET_PEERS,
+    ANSWER_GET_ALL_CLIENTS,
+    ANSWER_GET_USER_INFO
+};
+
+QDataStream& operator <<(QDataStream& out, const DhtCode& code);
+QDataStream& operator >>(QDataStream& in, DhtCode& code);
+
 
 #endif // DHT_H

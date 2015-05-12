@@ -17,7 +17,8 @@ SOURCES += \
     rsa/rsakey.cpp \
     rsa/rsakeygenerator.cpp \
     twofish/twofish.cpp \
-    dht.cpp
+    dht.cpp \
+    clientinfo.cpp
 
 HEADERS += \
     rsa/rsa.h \
@@ -25,7 +26,8 @@ HEADERS += \
     rsa/rsakeygenerator.h \
     twofish/twofish.h \
     bytearray.h \
-    dht.h
+    dht.h \
+    clientinfo.h
 
 LIBS += -lgmp -lboost_random
 
